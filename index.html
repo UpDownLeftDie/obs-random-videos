@@ -1,0 +1,61 @@
+<html>
+
+<head>
+  <script>
+    const videoFolder = '../path/to/videos/folder'
+    const videosList = [
+      'video1.mp4',
+      'video2.mp4'
+    ]
+    const videos = shuffleArr(videosList);
+    let count = 0;
+    let player = null;
+    let mp4Source = null;
+
+    function shuffleArr(a) {
+      var j, x, i;
+      for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+      }
+      return a;
+    }
+
+    function setVideoPlayer(player, i) {
+      player.setAttribute("src", `${videoFolder}${videos[i]}`);
+      player.load();
+      player.play();
+    }
+
+    function playNext(e) {
+      if (!e) e = window.event;
+      count++;
+      if (count > videos.length - 1) count = 0;
+      setVideoPlayer(player, count);
+    }
+  </script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <video id="videoPlayer" autoplay width="100%" height="100%"
+    style="position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+    <source src="" id="mp4Source" type="video/mp4" />
+  </video>
+  <script>
+    player = document.getElementById("videoPlayer");
+    player.addEventListener('ended', playNext, false);
+    mp4Source = document.getElementById("mp4Source");
+    setVideoPlayer(player, 0);
+  </script>
+</body>
+
+</html>
