@@ -1,0 +1,79 @@
+  <html>
+  <head>
+    <script>
+      // DON'T TOUCH //
+      // AUTO GENERATED VALUES //
+      const videoFolder = $videoFolder$;
+      const mediaFiles = $mediaFiles$;
+      const transitionVideo = $transitionVideo$;
+      const playOnlyOne = $playOnlyOne$;
+      const loopFirstVideo = $loopFirstVideo$;
+      // AUTO GENERATED VALUES //
+      // DON'T TOUCH //
+
+      const videos = shuffleArr(mediaFiles);
+      let count = 0;
+      let player = null;
+      let mp4Source = null;
+      let isTransition = true;
+
+      function shuffleArr(a) {
+        var j, x, i;
+        for (i = a.length - 1; i > 0; i--) {
+          j = Math.floor(Math.random() * (i + 1));
+          x = a[i];
+          a[i] = a[j];
+          a[j] = x;
+        }
+        return a;
+      }
+
+      function setVideoPlayer(video) {
+        if (!video) video = `${videoFolder}${videos[0]}`;
+        if (typeof video === 'number') video = `${videoFolder}${videos[video]}`;
+        mp4Source.setAttribute("src", video);
+        player.load();
+        player.play();
+      }
+
+      function playNext() {
+        if(!loopFirstVideo) {
+          if (!transitionVideo || !isTransition) {
+            count++;
+          }
+        }
+
+        if (count > videos.length - 1) count = 0;
+        if (!playOnlyOne) {
+          if (transitionVideo && transitionVideo !== "" && isTransition) {
+            setVideoPlayer(`${videoFolder}${transitionVideo}`);
+            isTransition = false;
+          } else {
+            setVideoPlayer(count);
+            isTransition = true;
+          }
+        }
+      }
+    </script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video id="videoPlayer" autoplay width="100%" height="100%"
+      style="position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+      <source src="" id="mp4Source" type="video/mp4" />
+    </video>
+    <script>
+      player = document.getElementById("videoPlayer");
+      player.addEventListener("ended", playNext, {passive: true});
+      mp4Source = document.getElementById("mp4Source");
+      setVideoPlayer();
+    </script>
+  </body>
+</html>
