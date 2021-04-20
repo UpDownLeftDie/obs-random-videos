@@ -4,14 +4,17 @@
   "description": "Play videos in random order!",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node index.js",
+    "build": "npm ddp && pkg -t node14-mac,node14-linux,node14-win -o obs-video-builder index.js",
+    "build-dev": "pkg -t node14-win -o obs-video-builder index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/UpDownLeftDie/obs-random-video.git"
   },
   "keywords": [
-    "obs"
+    "obs",
+    "twitch"
   ],
   "author": "UpDownLeftDie",
   "license": "Apache-2.0",
@@ -20,6 +23,7 @@
   },
   "homepage": "https://github.com/UpDownLeftDie/obs-random-video#readme",
   "dependencies": {
-    "inquirer": "^8.0.0"
+    "inquirer": "^8.0.0",
+    "pkg": "^4.5.1"
   }
 }

@@ -1,15 +1,26 @@
+const process = require('process');
 const fs = require('fs');
 const util = require('util');
 const inquirer = require('inquirer');
 const readdir = util.promisify(fs.readdir);
+const template = fs.readFileSync('template.html', 'utf8');
+
+const outputHtmlName = 'obs-random-videos.html';
+
 main();
 
 async function main() {
-  const mediaFileExts = ['.mp4', '.mp3'];
-  const videoFolder = __dirname;
+  const audioFileExts = ['.mp3', '.ogg', '.aac'];
+  const videoFileExts = ['.mp4', '.webm', '.mpeg4'];
+  const mediaFileExts = videoFileExts.concat(audioFileExts);
+  const videoFolder = process.cwd();
   const files = await readdir(videoFolder);
 
   let mediaFiles = filterFilesExtensions(files, mediaFileExts);
+  if (mediaFiles.length < 1) {
+    console.error('No media files found!');
+    await pressKeyToClose();
+  }
   const answers = await askQuestions(mediaFiles);
   mediaFiles = mediaFiles.filter(
     (mediaFile) => mediaFile !== answers.transitionVideo,
@@ -17,16 +28,29 @@ async function main() {
   const config = {
     ...answers,
     transitionVideo: `"${answers.transitionVideo}"`,
-    videoFolder: `"${videoFolder.replaceAll('\\', '\\\\')}\\\\"`,
+    videoFolder: `"${videoFolder.replace(/\\/gm, '\\\\')}\\\\"`,
     mediaFiles: JSON.stringify(mediaFiles),
   };
-  let template = fs.readFileSync('template.html', 'utf8');
 
+  let finalHtml = template;
   for (const [key, value] of Object.entries(config)) {
-    console.log(key, value);
-    template = template.replace(`$${key}$`, value);
+    finalHtml = finalHtml.replace(`$${key}$`, value);
   }
-  fs.writeFileSync('index.html', template);
+  fs.writeFileSync(outputHtmlName, finalHtml);
+
+  console.log(`Output final file too: ${videoFolder}\\${outputHtmlName}`);
+  await pressKeyToClose();
+}
+
+async function pressKeyToClose() {
+  console.log('\nPress any key to close...');
+  process.stdin.setRawMode(true);
+  return new Promise(() => {
+    process.stdin.on('data', () => {
+      process.stdin.setRawMode(false);
+      process.exit();
+    });
+  });
 }
 
 function filterFilesExtensions(files, extensions) {
@@ -83,8 +107,9 @@ async function askQuestions(mediaFiles) {
     loopFirstVideo: !!userAnswers.loopFirstVideo,
     transitionVideo:
       !userAnswers.transitionVideo || userAnswers.transitionVideo === 'CANCEL'
-        ? "''"
+        ? ''
         : userAnswers.transitionVideo,
   };
+  process.stdin.resume();
   return answers;
 }
