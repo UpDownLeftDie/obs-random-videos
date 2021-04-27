@@ -1,9 +1,7 @@
 node_modules
-testVideos
-test
-index.html
-obs-random-video.html
-obs-random-videos.html
+bin
+test*
+obs-random-video*
 *.7z
 *.exe
 *-linux

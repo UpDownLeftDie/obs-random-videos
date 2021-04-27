@@ -6,15 +6,15 @@ Play videos in random order!
 
 ## Download
 
-### [Windows](https://github.com/UpDownLeftDie/obs-random-video/releases/latest/download/obs-video-builder-win.7z)
+### [Windows](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest/download/obs-random-videos-win.exe)
 
-### [Mac](https://github.com/UpDownLeftDie/obs-random-video/releases/latest/download/obs-video-builder-macos.7z)
+### [Mac](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest/download/obs-random-videos-macos)
 
-### [Linux](https://github.com/UpDownLeftDie/obs-random-video/releases/latest/download/obs-video-builder-linux.7z)
+### [Linux](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest/download/obs-random-videos-linux)
 
 ## Instructions
 
-1. Download the latest executable for your system from above or [releases](https://github.com/UpDownLeftDie/obs-random-video/releases/latest)
+1. Download the latest executable for your system from above or [releases](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
 2. Place the executable into the folder where your video/audio files you want to use are located
 3. Run the file and follow the prompts for your settings
 4. A new file called `obs-random-videos.html` will be created in the same folder
@@ -47,7 +47,6 @@ Play videos in random order!
 
 ## TODO
 
-* Rewrite auto-builder in Go
 * Audio-only or video-only modes
 * Option for cross-fading between videos
 * Option to HTML background color
