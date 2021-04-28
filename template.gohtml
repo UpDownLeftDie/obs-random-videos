@@ -1,11 +1,11 @@
 <html>
   <head>
     <script>
-      const videoFolder = "$VideoFolder$";
-      const mediaFiles = $MediaFiles$;
-      const transitionVideo = "$TransitionVideo$";
-      const playOnlyOne = $PlayOnlyOne$;
-      const loopFirstVideo = $LoopFirstVideo$;
+      const videoFolder = "{{ .VideoFolder }}";
+      const mediaFiles =  ["{{ StringsJoin .MediaFiles "\", \"" }}"];
+      const transitionVideo = "{{ .TransitionVideo }}";
+      const playOnlyOne = {{ .PlayOnlyOne }};
+      const loopFirstVideo = {{ .LoopFirstVideo }};
 
       const videos = shuffleArr(mediaFiles);
       let count = 0;
