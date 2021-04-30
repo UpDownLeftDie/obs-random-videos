@@ -1,0 +1,8 @@
+node_modules
+bin
+test*
+obs-random-video*
+*.7z
+*.exe
+*-linux
+*-macos
