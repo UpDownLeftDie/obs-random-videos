@@ -48,6 +48,10 @@
             setVideoPlayer(count);
             isTransition = true;
           }
+        } else {
+          // Remove video after playing once
+          mp4Source.removeAttribute('src');
+          player.load();
         }
       }
     </script>
