@@ -21,9 +21,15 @@ Play videos in random order!
 
 ### Supported files
 
+#### Video
+
 * mp4
+* m4v
 * webm
 * mpeg4
+
+#### Audio
+
 * mp3
 * ogg
 * aac

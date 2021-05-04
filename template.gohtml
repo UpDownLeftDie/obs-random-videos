@@ -9,10 +9,13 @@
 
       const videos = shuffleArr(mediaFiles);
       let count = 0;
-      let player = null;
-      let mp4Source = null;
       let isTransition = true;
 
+      /**
+        * Shuffles an array and returns a new array
+        * @param array Original array to be shuffled
+        * @returns array Newly shuffled array
+        */
       function shuffleArr(a) {
         var j, x, i;
         for (i = a.length - 1; i > 0; i--) {
@@ -24,30 +27,66 @@
         return a;
       }
 
-      function setVideoPlayer(video) {
-        if (!video) video = `${videoFolder}${videos[0]}`;
-        if (typeof video === 'number') video = `${videoFolder}${videos[video]}`;
-        mp4Source.setAttribute("src", video);
-        player.load();
-        player.play();
-      }
+      // TODO refactor this function for readability
+      /**
+        * Loads the next video into the alternate player and plays the current player
+        * @param player The player that is to be played when this function is called
+        * @param nextPlayer The alternate player that is to be prepared to be played next
+        * @returns void
+        */
+      function playNext(player, nextPlayer) {
+        const mp4Source = nextPlayer.getElementsByClassName("mp4Source")[0];
 
-      function playNext() {
+        // Looping a sigle video doesnt need to increment the counter
         if(!loopFirstVideo) {
+          // Don't increment if playing the transition video
           if (!transitionVideo || !isTransition) {
             count++;
+            // Reset to the first video
+            if (count > videos.length - 1) count = 0;
           }
         }
 
-        if (count > videos.length - 1) count = 0;
-        if (!playOnlyOne) {
+        // Plays a video once and on the second run of this function removes it
+        if (playOnlyOne) {
+          if (count > 1) {
+            // Remove video after playing once
+            player
+              .getElementsByClassName('mp4Source')[0]
+              .removeAttribute('src');
+            mp4Source.removeAttribute('src');
+            player.load();
+            nextPlayer.load();
+            player.style["opacity"] = 0;
+            nextPlayer.style["opacity"] = 0;
+          }
+        } else {
+          // TODO: we can use this opacity to crossfade between videos
+          player.style["z-index"] = 1;
+          player.style["opacity"] = 1;
+          nextPlayer.style["z-index"] = 0;
+          nextPlayer.style["opacity"] = 0;
+          let video = `${videoFolder}${videos[count]}`;
+
           if (transitionVideo && transitionVideo !== "" && isTransition) {
-            setVideoPlayer(`${videoFolder}${transitionVideo}`);
+            video = `${videoFolder}${transitionVideo}`;
             isTransition = false;
           } else {
-            setVideoPlayer(count);
             isTransition = true;
           }
+
+          // If we have a transitionVideo and/or looping a single video:
+          //   the secondary video player (or both without a transition video) never change.
+          //   Only set the second video player the first time this function runs.
+          //   Otherwise, set mp4source all other times
+          // TODO: replace with better code. dont like this if statment but it works :)
+          if (count === 0 || (!loopFirstVideo && (!transitionVideo || isTransition))) {
+            if (loopFirstVideo) count = 1; // prevent looping video from entering this block
+            mp4Source.setAttribute("src", video);
+            nextPlayer.load();
+          }
+          nextPlayer.pause();
+          player.play();
         }
       }
     </script>
@@ -61,15 +100,27 @@
   </head>
 
   <body>
-    <video id="videoPlayer" autoplay width="100%" height="100%"
-      style="position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
-      <source src="" id="mp4Source" type="video/mp4" />
+    <video id="videoPlayer2" preload="auto" autoplay width="100%" height="100%"
+      style="z-index: 0; position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+      <source src="" class="mp4Source" type="video/mp4" />
+    </video>
+    <video id="videoPlayer1" preload="auto" autoplay width="100%" height="100%"
+      style="z-index: 1; position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+      <source src="" class="mp4Source" type="video/mp4" />
     </video>
     <script>
-      player = document.getElementById("videoPlayer");
-      player.addEventListener("ended", playNext, {passive: true});
-      mp4Source = document.getElementById("mp4Source");
-      setVideoPlayer();
+      const player = document.getElementById("videoPlayer1");
+      player.addEventListener("ended", () => playNext(player2, player), {passive: true});
+      const player2 = document.getElementById("videoPlayer2");
+      player2.addEventListener("ended", () => playNext(player, player2), {passive: true});
+
+      {{/* First run logic */}}
+      const mp4Source = player.getElementsByClassName("mp4Source")[0];
+      const video = `${videoFolder}${videos[0]}`;
+      mp4Source.setAttribute("src", video);
+      player.load();
+
+      playNext(player, player2);
     </script>
   </body>
 </html>

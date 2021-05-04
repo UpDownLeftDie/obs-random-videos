@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"text/template"
 	"time"
@@ -29,7 +30,7 @@ type UserAnswers struct {
 
 var outputHtmlName = "obs-random-videos.html"
 var audioFileExts = []string{".mp3", ".ogg", ".aac"}
-var videoFileExts = []string{".mp4", ".webm", ".mpeg4"}
+var videoFileExts = []string{".mp4", ".webm", ".mpeg4", ".m4v"}
 var mediaFileExts = append(audioFileExts, videoFileExts...)
 var promptDelay = 100 * time.Millisecond // helps with race conditionsin promptui
 
@@ -38,7 +39,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to get current directory path: %v", err)
 	}
-	currentDir = strings.Replace(currentDir, "\\", "\\\\", -1) + "\\\\"
+	separator := string(os.PathSeparator)
+	currentDir += separator
+	if runtime.GOOS == "windows" {
+		separatorEscaped := strings.Repeat(separator, 2)
+		currentDir = strings.Replace(currentDir, separator, separatorEscaped, -1)
+	}
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
 		log.Fatalf("Failed to read current directory: %v", err)
