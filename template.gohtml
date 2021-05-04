@@ -9,8 +9,6 @@
 
       const videos = shuffleArr(mediaFiles);
       let count = 0;
-      let player = null;
-      let mp4Source = null;
       let isTransition = true;
 
       function shuffleArr(a) {
@@ -24,34 +22,43 @@
         return a;
       }
 
-      function setVideoPlayer(video) {
-        if (!video) video = `${videoFolder}${videos[0]}`;
-        if (typeof video === 'number') video = `${videoFolder}${videos[video]}`;
-        mp4Source.setAttribute("src", video);
-        player.load();
-        player.play();
-      }
-
-      function playNext() {
+      function playNext(player, nextPlayer) {
+        const mp4Source = nextPlayer.getElementsByClassName("mp4Source")[0];
         if(!loopFirstVideo) {
           if (!transitionVideo || !isTransition) {
             count++;
+            if (count > videos.length - 1) count = 0;
           }
         }
 
-        if (count > videos.length - 1) count = 0;
-        if (!playOnlyOne) {
-          if (transitionVideo && transitionVideo !== "" && isTransition) {
-            setVideoPlayer(`${videoFolder}${transitionVideo}`);
-            isTransition = false;
-          } else {
-            setVideoPlayer(count);
-            isTransition = true;
+        if (playOnlyOne) {
+          if (count > 1) {
+            // Remove video after playing once
+            player
+              .getElementsByClassName('mp4Source')[0]
+              .removeAttribute('src');
+            mp4Source.removeAttribute('src');
+            player.load();
+            nextPlayer.load();
           }
         } else {
-          // Remove video after playing once
-          mp4Source.removeAttribute('src');
-          player.load();
+          // TODO: we can use this opacity to crossfade between videos
+          player.style["z-index"] = 1;
+          player.style["opacity"] = 1;
+          nextPlayer.style["z-index"] = 0;
+          nextPlayer.style["opacity"] = 0;
+          let video = `${videoFolder}${videos[count]}`;
+
+          if (transitionVideo && transitionVideo !== "" && isTransition) {
+            video = `${videoFolder}${transitionVideo}`;
+            isTransition = false;
+          } else {
+            isTransition = true;
+          }
+          mp4Source.setAttribute("src", video);
+          nextPlayer.load();
+          nextPlayer.pause();
+          player.play();
         }
       }
     </script>
@@ -65,15 +72,27 @@
   </head>
 
   <body>
-    <video id="videoPlayer" autoplay width="100%" height="100%"
-      style="position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
-      <source src="" id="mp4Source" type="video/mp4" />
+    <video id="videoPlayer2" preload="auto" autoplay width="100%" height="100%"
+      style="z-index: 0; position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+      <source src="" class="mp4Source" type="video/mp4" />
+    </video>
+    <video id="videoPlayer1" preload="auto" autoplay width="100%" height="100%"
+      style="z-index: 1; position:fixed; right:0; bottom:0; min-width:100%; min-height:100%;">
+      <source src="" class="mp4Source" type="video/mp4" />
     </video>
     <script>
-      player = document.getElementById("videoPlayer");
-      player.addEventListener("ended", playNext, {passive: true});
-      mp4Source = document.getElementById("mp4Source");
-      setVideoPlayer();
+      const player = document.getElementById("videoPlayer1");
+      player.addEventListener("ended", () => playNext(player2, player), {passive: true});
+      const player2 = document.getElementById("videoPlayer2");
+      player2.addEventListener("ended", () => playNext(player, player2), {passive: true});
+
+      {{/* First run logic */}}
+      const mp4Source = player.getElementsByClassName("mp4Source")[0];
+      const video = `${videoFolder}${videos[0]}`;
+      mp4Source.setAttribute("src", video);
+      player.load();
+
+      playNext(player, player2);
     </script>
   </body>
 </html>

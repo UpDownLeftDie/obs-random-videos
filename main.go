@@ -30,7 +30,7 @@ type UserAnswers struct {
 
 var outputHtmlName = "obs-random-videos.html"
 var audioFileExts = []string{".mp3", ".ogg", ".aac"}
-var videoFileExts = []string{".mp4", ".webm", ".mpeg4"}
+var videoFileExts = []string{".mp4", ".webm", ".mpeg4", ".m4v"}
 var mediaFileExts = append(audioFileExts, videoFileExts...)
 var promptDelay = 100 * time.Millisecond // helps with race conditionsin promptui
 
