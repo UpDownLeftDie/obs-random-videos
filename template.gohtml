@@ -11,6 +11,11 @@
       let count = 0;
       let isTransition = true;
 
+      /**
+        * Shuffles an array and returns a new array
+        * @param array Original array to be shuffled
+        * @returns array Newly shuffled array
+        */
       function shuffleArr(a) {
         var j, x, i;
         for (i = a.length - 1; i > 0; i--) {
@@ -22,15 +27,27 @@
         return a;
       }
 
+      // TODO refactor this function for readability
+      /**
+        * Loads the next video into the alternate player and plays the current player
+        * @param player The player that is to be played when this function is called
+        * @param nextPlayer The alternate player that is to be prepared to be played next
+        * @returns void
+        */
       function playNext(player, nextPlayer) {
         const mp4Source = nextPlayer.getElementsByClassName("mp4Source")[0];
+
+        // Looping a sigle video doesnt need to increment the counter
         if(!loopFirstVideo) {
+          // Don't increment if playing the transition video
           if (!transitionVideo || !isTransition) {
             count++;
+            // Reset to the first video
             if (count > videos.length - 1) count = 0;
           }
         }
 
+        // Plays a video once and on the second run of this function removes it
         if (playOnlyOne) {
           if (count > 1) {
             // Remove video after playing once
@@ -40,6 +57,8 @@
             mp4Source.removeAttribute('src');
             player.load();
             nextPlayer.load();
+            player.style["opacity"] = 0;
+            nextPlayer.style["opacity"] = 0;
           }
         } else {
           // TODO: we can use this opacity to crossfade between videos
@@ -55,8 +74,17 @@
           } else {
             isTransition = true;
           }
-          mp4Source.setAttribute("src", video);
-          nextPlayer.load();
+
+          // If we have a transitionVideo and/or looping a single video:
+          //   the secondary video player (or both without a transition video) never change.
+          //   Only set the second video player the first time this function runs.
+          //   Otherwise, set mp4source all other times
+          // TODO: replace with better code. dont like this if statment but it works :)
+          if (count === 0 || (!loopFirstVideo && (!transitionVideo || isTransition))) {
+            if (loopFirstVideo) count = 1; // prevent looping video from entering this block
+            mp4Source.setAttribute("src", video);
+            nextPlayer.load();
+          }
           nextPlayer.pause();
           player.play();
         }
