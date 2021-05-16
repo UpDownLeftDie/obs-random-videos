@@ -20,7 +20,7 @@ import (
 var templateHtml string
 
 type UserAnswers struct {
-	VideoFolder         string
+	MediaFolder         string
 	MediaFiles          []string
 	PlayOnlyOne         bool
 	LoopFirstVideo      bool
@@ -82,7 +82,7 @@ func main() {
 
 func askQuestions(currentDir string, mediaFiles []string) (UserAnswers, error) {
 	answers := UserAnswers{
-		VideoFolder:         currentDir,
+		MediaFolder:         currentDir,
 		MediaFiles:          mediaFiles,
 		PlayOnlyOne:         false,
 		LoopFirstVideo:      false,
