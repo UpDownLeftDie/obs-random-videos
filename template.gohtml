@@ -59,7 +59,8 @@
           nextPlayer.load();
           nextPlayer.pause();
 
-          localStorage.setItem('lastPlayed', 'Tom');
+          localStorage.setItem("lastPlayed", localStorage.getItem("nextPlay"));
+          localStorage.setItem("nextPlay", video);
           player.play();
         }
       }
@@ -90,7 +91,12 @@
 
       /* First run logic */
       const mp4Source = player.getElementsByClassName("mp4Source")[0];
-      const video = `${mediaFolder}${mediaFiles[0]}`;
+      let video = `${mediaFolder}${mediaFiles[0]}`;
+      // check if we played this video last run
+      if (mediaFiles.length > 1 && localStorage.getItem("lastPlayed") === video) {
+        video = `${mediaFolder}${mediaFiles[1]}`;
+      }
+      localStorage.setItem("nextPlay", video);
       mp4Source.setAttribute("src", video);
       player.load();
 
