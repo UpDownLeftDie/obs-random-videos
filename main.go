@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -20,6 +21,12 @@ import (
 //go:embed template.gohtml
 var templateHtml string
 
+//go:embed js/main.js
+var mainScript string
+
+//go:embed js/body.js
+var bodyScript string
+
 type UserAnswers struct {
 	MediaFolder         string
 	MediaFiles          []string
@@ -27,6 +34,16 @@ type UserAnswers struct {
 	LoopFirstVideo      bool
 	HaveTransitionVideo bool
 	TransitionVideo     string
+}
+
+type Scripts struct {
+	MainScript string
+	BodyScript string
+}
+
+var scripts = Scripts{
+	MainScript: mainScript,
+	BodyScript: bodyScript,
 }
 
 var outputHtmlName = "obs-random-videos.html"
@@ -42,6 +59,7 @@ func main() {
 	}
 	separator := string(os.PathSeparator)
 	currentDirHTML := currentDir + separator
+	outputHtmlName = currentDirHTML + outputHtmlName
 	if runtime.GOOS == "windows" {
 		separatorEscaped := strings.Repeat(separator, 2)
 		currentDirHTML = strings.Replace(currentDirHTML, separator, separatorEscaped, -1)
@@ -58,15 +76,9 @@ func main() {
 		input.Scan()
 		return
 	}
-	outputHtml, err := os.Create(outputHtmlName)
-	if err != nil {
-		log.Fatalf("Failed create output file: %v", err)
-	}
 
 	answers, err := askQuestions(currentDirHTML, mediaFiles)
 	if err != nil {
-		outputHtml.Close()
-		os.Remove(outputHtmlName)
 		log.Fatalf("Something went wrong getting user input: %v", err)
 	}
 	if answers.TransitionVideo != "" {
@@ -74,14 +86,25 @@ func main() {
 	}
 
 	templateHtml = "<!--\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHtml
-	t := template.Must(template.New("html").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(templateHtml))
-	err = t.Execute(outputHtml, answers)
+	var outputHtml bytes.Buffer
+	t := template.Must(template.New("html").Parse(templateHtml))
+	err = t.Execute(&outputHtml, scripts)
 	if err != nil {
-		outputHtml.Close()
-		os.Remove(outputHtmlName)
 		log.Fatalf("Failed compiling template: %v", err)
 	}
-	outputHtml.Close()
+	t = template.Must(template.New("html").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(outputHtml.String()))
+	outputHtml.Reset()
+	err = t.Execute(&outputHtml, answers)
+	if err != nil {
+		log.Fatalf("Failed compiling template final: %v", err)
+	}
+	outputHtmlFile, err := os.Create(outputHtmlName)
+	if err != nil {
+		log.Fatalf("Failed create output file: %v", err)
+	}
+	outputHtmlFile.WriteString(outputHtml.String())
+	outputHtmlFile.Close()
+	os.Exit(0)
 }
 
 func askQuestions(currentDir string, mediaFiles []string) (UserAnswers, error) {
