@@ -6,3 +6,4 @@ obs-random-video*
 *.exe
 *-linux
 *-macos
+.DS_Store

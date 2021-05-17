@@ -1,13 +1,14 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
@@ -20,7 +21,7 @@ import (
 var templateHtml string
 
 type UserAnswers struct {
-	VideoFolder         string
+	MediaFolder         string
 	MediaFiles          []string
 	PlayOnlyOne         bool
 	LoopFirstVideo      bool
@@ -30,28 +31,31 @@ type UserAnswers struct {
 
 var outputHtmlName = "obs-random-videos.html"
 var audioFileExts = []string{".mp3", ".ogg", ".aac"}
-var videoFileExts = []string{".mp4", ".webm", ".mpeg4", ".m4v"}
+var videoFileExts = []string{".mp4", ".webm", ".mpeg4", ".m4v", ".mov"}
 var mediaFileExts = append(audioFileExts, videoFileExts...)
 var promptDelay = 100 * time.Millisecond // helps with race conditionsin promptui
 
 func main() {
-	currentDir, err := os.Getwd()
+	currentDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatalf("Failed to get current directory path: %v", err)
 	}
 	separator := string(os.PathSeparator)
-	currentDir += separator
+	currentDirHTML := currentDir + separator
 	if runtime.GOOS == "windows" {
 		separatorEscaped := strings.Repeat(separator, 2)
-		currentDir = strings.Replace(currentDir, separator, separatorEscaped, -1)
+		currentDirHTML = strings.Replace(currentDirHTML, separator, separatorEscaped, -1)
 	}
-	files, err := ioutil.ReadDir("./")
+	files, err := os.ReadDir(currentDir)
 	if err != nil {
 		log.Fatalf("Failed to read current directory: %v", err)
 	}
 	mediaFiles := filterFiles(files, mediaFileExts)
 	if len(mediaFiles) < 1 {
-		log.Fatal("No media files found!")
+		fmt.Printf("No media files found in: %s", currentDir)
+		fmt.Print("\n\nPress enter to exit...")
+		input := bufio.NewScanner(os.Stdin)
+		input.Scan()
 		return
 	}
 	outputHtml, err := os.Create(outputHtmlName)
@@ -59,7 +63,7 @@ func main() {
 		log.Fatalf("Failed create output file: %v", err)
 	}
 
-	answers, err := askQuestions(currentDir, mediaFiles)
+	answers, err := askQuestions(currentDirHTML, mediaFiles)
 	if err != nil {
 		outputHtml.Close()
 		os.Remove(outputHtmlName)
@@ -82,7 +86,7 @@ func main() {
 
 func askQuestions(currentDir string, mediaFiles []string) (UserAnswers, error) {
 	answers := UserAnswers{
-		VideoFolder:         currentDir,
+		MediaFolder:         currentDir,
 		MediaFiles:          mediaFiles,
 		PlayOnlyOne:         false,
 		LoopFirstVideo:      false,
@@ -117,7 +121,7 @@ func removeTransitionVideo(transitionVideo string, mediaFiles []string) []string
 	return files
 }
 
-func filterFiles(files []fs.FileInfo, fileExts []string) []string {
+func filterFiles(files []fs.DirEntry, fileExts []string) []string {
 	filteredFiles := []string{}
 	for _, f := range files {
 		for _, ext := range fileExts {
