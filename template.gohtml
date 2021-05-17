@@ -24,6 +24,7 @@
 
       function playNext(player, nextPlayer) {
         const nextMp4Source = nextPlayer.getElementsByClassName("mp4Source")[0];
+        const currentMp4Source = player.getElementsByClassName('mp4Source')[0];
         if(!loopFirstVideo) {
           if (!transitionVideo || !isTransition) {
             count++;
@@ -34,9 +35,7 @@
         if (playOnlyOne) {
           if (count > 1) {
             // Remove video after playing once
-            player
-              .getElementsByClassName('mp4Source')[0]
-              .removeAttribute('src');
+            currentMp4Source.removeAttribute('src');
             nextMp4Source.removeAttribute('src');
             player.load();
             nextPlayer.load();
@@ -49,8 +48,9 @@
           nextPlayer.style["opacity"] = 0;
           let video = `${mediaFolder}${mediaFiles[count]}`;
 
+          const transitionVideoPath =  `${mediaFolder}${transitionVideo}`
           if (transitionVideo && transitionVideo !== "" && isTransition) {
-            video = `${mediaFolder}${transitionVideo}`;
+            video = transitionVideoPath;
             isTransition = false;
           } else {
             isTransition = true;
@@ -59,8 +59,10 @@
           nextPlayer.load();
           nextPlayer.pause();
 
-          localStorage.setItem("lastPlayed", localStorage.getItem("nextPlay"));
-          localStorage.setItem("nextPlay", video);
+          const currentVideo = currentMp4Source.getAttribute("src");
+          if (currentVideo !== transitionVideoPath) {
+            localStorage.setItem("lastPlayed", currentVideo);
+          }
           player.play();
         }
       }
@@ -96,7 +98,6 @@
       if (mediaFiles.length > 1 && localStorage.getItem("lastPlayed") === video) {
         video = `${mediaFolder}${mediaFiles[1]}`;
       }
-      localStorage.setItem("nextPlay", video);
       mp4Source.setAttribute("src", video);
       player.load();
 
