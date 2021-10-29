@@ -1,14 +1,12 @@
 builds:
-  -
-    goos:
+  - goos:
       - windows
       - darwin
       - linux
     goarch:
       - amd64
 archives:
-  -
-    replacements:
+  - replacements:
       amd64: 64-bit
       386: 32-bit
       darwin: macos

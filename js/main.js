@@ -4,7 +4,9 @@ const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\"
 const transitionVideo = /** @type {string} */("{{ .TransitionVideo }}");
 const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
 const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
-const transitionVideoPath = /** @type {string} */ (`${mediaFolder}${transitionVideo}`);
+const transitionVideoPath = /** @type {string} */ (
+  `${mediaFolder}${transitionVideo}`
+);
 
 let isTransition = true;
 
