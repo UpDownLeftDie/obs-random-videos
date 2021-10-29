@@ -1,5 +1,11 @@
-const player = document.getElementById('videoPlayer1');
-const player2 = document.getElementById('videoPlayer2');
+// @ts-check
+const player = /** @type {HTMLMediaElement} */ (
+  document.getElementById('videoPlayer1')
+);
+
+const player2 = /** @type {HTMLMediaElement} */ (
+  document.getElementById('videoPlayer2')
+);
 player.addEventListener(
   'ended',
   () => {
@@ -29,7 +35,8 @@ player2.addEventListener(
 
 const mp4Source = player.getElementsByClassName('mp4Source')[0];
 let video = getNextPlaylistItem();
-progressPlaylistState(); // have to move the state forward after getting the first video
+// have to move the state forward after getting the first video
+progressPlaylistState();
 
 mp4Source.setAttribute('src', video);
 player.load();
