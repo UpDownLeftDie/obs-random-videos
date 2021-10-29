@@ -2,7 +2,7 @@
 
 Play videos in random order!
 
-*Perfect for BRB screens!*
+_Perfect for BRB screens!_
 
 ## [Download](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
 
@@ -23,32 +23,32 @@ Play videos in random order!
 
 #### Video
 
-* mp4
-* m4v
-* webm
-* mpeg4
+- mp4
+- m4v
+- webm
+- mpeg4
 
 #### Audio
 
-* mp3
-* ogg
-* aac
+- mp3
+- ogg
+- aac
 
 ## Notes
 
-* Set `Refresh browser when scene becomes active` to randomize on each load
-* Video resolutions should match your canvas aspect ratio
-* **Autoplay only works in OBS!**
-  * If you want to test this in your browser:
+- Set `Refresh browser when scene becomes active`
+- Video resolutions should match your canvas aspect ratio
+- **Autoplay only works in OBS!**
+  - If you want to test this in your browser:
     1. Open the `obs-random-videos.html` with your browser
     2. Right-click on the image and click "Show controls"
     3. Hit the play button
-* Pro tip: webm videos support transparency (convert mov to webm to save on file size)
+- Pro tip: webm videos support transparency (convert mov to webm to save on file size)
 
 ## TODO
 
-* Audio-only or video-only modes
-* Option for cross-fading between videos
-* Option to HTML background color
-  * Good for videos with weird aspect ratio
-  * Good for audio files
+- Audio-only or video-only modes
+- Option for cross-fading between videos
+- Option to HTML background color
+  - Good for videos with weird aspect ratio
+  - Good for audio files
