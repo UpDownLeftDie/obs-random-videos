@@ -3,6 +3,7 @@ const initMediaFiles =  ["{{ StringsJoin .MediaFiles "\", \"" }}"];
 const transitionVideo = "{{ .TransitionVideo }}";
 const playOnlyOne = {{ .PlayOnlyOne }};
 const loopFirstVideo = {{ .LoopFirstVideo }};
+const transitionVideoPath =  `${mediaFolder}${transitionVideo}`
 
 const mediaFiles = shuffleArr(initMediaFiles);
 let count = 0;
@@ -16,7 +17,9 @@ function shuffleArr(a) {
     a[i] = a[j];
     a[j] = x;
   }
-  return a;
+
+
+  return a.map(b => `${mediaFolder}${b}`);
 }
 
 function playNext(player, nextPlayer) {
@@ -43,9 +46,8 @@ function playNext(player, nextPlayer) {
     player.style["opacity"] = 1;
     nextPlayer.style["z-index"] = 0;
     nextPlayer.style["opacity"] = 0;
-    let video = `${mediaFolder}${mediaFiles[count]}`;
+    let video = `${mediaFiles[count]}`;
 
-    const transitionVideoPath =  `${mediaFolder}${transitionVideo}`
     if (transitionVideo && transitionVideo !== "" && isTransition) {
       video = transitionVideoPath;
       isTransition = false;
