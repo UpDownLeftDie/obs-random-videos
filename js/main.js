@@ -1,22 +1,18 @@
 // @ts-check
-const mediaFolder = /** @type {string} */ ("http:\\\\absolute\\{{ .MediaFolder }}");
 const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\", \"" }}"]);
-const transitionVideo = /** @type {string} */("{{ .TransitionVideo }}");
+const transitionVideoPath = /** @type {string} */("{{ .TransitionVideo }}");
 const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
 const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
-const transitionVideoPath = /** @type {string} */ (
-  `${mediaFolder}${transitionVideo}`
-);
-
 let isTransition = true;
 
 /**
  * shuffleArr takes in an array and returns a new array in random order
- * @param {any[]} a any array to be shuffled
+ * @param {any[]} originalArray any array to be shuffled
  * @return {any[]} shuffled array
  */
-function shuffleArr(a) {
-  var j, x, i;
+function shuffleArr(originalArray) {
+  let a = [...originalArray]
+  let j, x, i;
   for (i = a.length - 1; i > 0; i--) {
     j = Math.floor(Math.random() * (i + 1));
     x = a[i];
@@ -24,17 +20,6 @@ function shuffleArr(a) {
     a[j] = x;
   }
   return a;
-}
-
-/**
- * prependFolderToFiles simply adds a folder path to a list of files and returns
- *  the new array
- * @param {string} folder folder path, must end with a trailing slash
- * @param {string[]} files array of file names
- * @returns {string[]} new array with full path to files
- */
-function prependFolderToFiles(folder, files) {
-  return files.map((file) => `${folder}${file}`);
 }
 
 /**
@@ -52,10 +37,7 @@ function storePlaylistState(state) {
  * @returns {string[]} a new playlist
  */
 function getNewPlaylist() {
-  const playlist = prependFolderToFiles(
-    mediaFolder,
-    shuffleArr(initMediaFiles),
-  );
+  const playlist = shuffleArr(initMediaFiles);
   storePlaylistState(playlist);
   return playlist;
 }
@@ -69,9 +51,9 @@ function getPlaylist() {
   try {
     playlist = JSON.parse(localStorage.getItem('playlist'));
   } catch {
-    console.log('playlist empty!');
+    console.log('playlist doesn\'t exist yet!');
   }
-  if (!playlist || playlist.length === 0) {
+  if (!playlist || playlist.length === 0 || typeof playlist.pop === 'undefined') {
     playlist = getNewPlaylist();
   }
   return playlist;
@@ -99,7 +81,7 @@ function getNextPlaylistItem() {
   let mediaItem = playlist.pop();
 
   // check if we played this mediaItem last run
-  console.log({ lastPlayed: localStorage.getItem('lastPlayed'), mediaItem });
+  console.log({ lastPlayed: localStorage.getItem('lastPlayed'), mediaItem, wasLastPlayed: localStorage.getItem('lastPlayed') === mediaItem });
   if (localStorage.getItem('lastPlayed') === mediaItem) {
     // moves the repeated item to the end so its not skipped entirely
     storePlaylistState([mediaItem].concat(playlist));
@@ -124,7 +106,7 @@ function playNext(player, nextPlayer) {
   }
 
   let video = localStorage.getItem('lastPlayed');
-  if (!loopFirstVideo && (!transitionVideo || !isTransition)) {
+  if (!loopFirstVideo && (!transitionVideoPath || !isTransition)) {
     video = getNextPlaylistItem();
     console.log(`next video: ${video}`);
   }
@@ -135,7 +117,7 @@ function playNext(player, nextPlayer) {
   nextPlayer.style['z-index'] = 0;
   nextPlayer.style['opacity'] = '0';
 
-  if (transitionVideo && transitionVideo !== '' && isTransition) {
+  if (transitionVideoPath && transitionVideoPath !== '' && isTransition) {
     video = transitionVideoPath;
     isTransition = false;
   } else {
