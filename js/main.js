@@ -1,5 +1,5 @@
 // @ts-check
-const mediaFolder = /** @type {string} */ ("{{ .MediaFolder }}");
+const mediaFolder = /** @type {string} */ ("http:\\\\absolute\\{{ .MediaFolder }}");
 const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\", \"" }}"]);
 const transitionVideo = /** @type {string} */("{{ .TransitionVideo }}");
 const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
