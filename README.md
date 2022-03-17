@@ -5,6 +5,7 @@ Play videos in random order!
 _Perfect for BRB screens!_
 
 ## [Download](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
+### [Chat Support]([https](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum))
 
 ## Instructions
 
