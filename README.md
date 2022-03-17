@@ -46,12 +46,16 @@ _Perfect for BRB screens!_
     2. ~~Right-click on the image and click "Show controls"~~
     3. ~~Hit the play button~~
 - Pro tip: webm videos support transparency (convert mov to webm to save on file size)
-- Stuck?
-  - [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio)
-  - Open Chrome Dev tools
-  - `Application` tab
-  - Make sure `Local and session storage` box is CHECKED
-  - Click `Clear site data`
+
+## Stuck? Or nothing happening?
+
+  1. Try hitting `Refresh cache of current page` in OBS **at least** as many time as you have videos in your playlist
+  2. [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio) and open the page for the browser source
+     1. Open Chrome Dev tools
+     2. `Application` tab
+     3. Make sure `Local and session storage` box is CHECKED
+     4. Click `Clear site data`
+  3. If issues persist: join the [Guilded server](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum)
 
 ## TODO
 
