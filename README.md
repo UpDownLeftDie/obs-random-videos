@@ -5,6 +5,7 @@ Play videos in random order!
 _Perfect for BRB screens!_
 
 ## [Download](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
+
 ### [Chat Support](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum)
 
 ## Instructions
@@ -40,11 +41,17 @@ _Perfect for BRB screens!_
 - Set `Refresh browser when scene becomes active`
 - Video resolutions should match your canvas aspect ratio
 - **Autoplay only works in OBS!**
-  - If you want to test this in your browser:
-    1. Open the `obs-random-videos.html` with your browser
-    2. Right-click on the image and click "Show controls"
-    3. Hit the play button
+  - ~~If you want to test this in your browser:~~ Not working in v3.3.0
+    1. ~~Open the `obs-random-videos.html` with your browser~~
+    2. ~~Right-click on the image and click "Show controls"~~
+    3. ~~Hit the play button~~
 - Pro tip: webm videos support transparency (convert mov to webm to save on file size)
+- Stuck?
+  - [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio)
+  - Open Chrome Dev tools
+  - `Application` tab
+  - Make sure `Local and session storage` box is CHECKED
+  - Click `Clear site data`
 
 ## TODO
 
