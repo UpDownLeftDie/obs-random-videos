@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/md5"
 	_ "embed"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -35,6 +37,7 @@ type UserAnswers struct {
 	LoopFirstVideo      bool
 	HaveTransitionVideo bool
 	TransitionVideo     string
+	HashKey             string
 }
 
 // Scripts stores javascript scripts that are later injected into templateHTML
@@ -54,8 +57,8 @@ var (
 	videoFileExts  = []string{".mp4", ".webm", ".mpeg4", ".m4v", ".mov"}
 	// imagesFileExts = []string{".png", ".jpg", ".jpeg", ".gif", ".webp"}
 	// mediaFileExts  = append(append(audioFileExts, videoFileExts...), imagesFileExts...)
-	mediaFileExts  = append(audioFileExts, videoFileExts...)
-	promptDelay    = 100 * time.Millisecond // helps with race conditionsin promptui
+	mediaFileExts = append(audioFileExts, videoFileExts...)
+	promptDelay   = 100 * time.Millisecond // helps with race conditionsin promptui
 )
 
 func main() {
@@ -123,12 +126,11 @@ func getMediaFiles(currentDir string) []string {
 
 func fixFilePath(filePath string) string {
 	separator := string(os.PathSeparator)
-	newFilePath := fmt.Sprintf("http:%sabsolute%s%s", separator+separator, separator, filePath)
 	if runtime.GOOS == "windows" {
 		separatorEscaped := strings.Repeat(separator, 2)
-		return strings.Replace(newFilePath, separator, separatorEscaped, -1)
+		return strings.Replace(filePath, separator, separatorEscaped, -1)
 	}
-	return newFilePath
+	return filePath
 }
 
 func askQuestions(mediaFiles []string, mainDir string) (UserAnswers, error) {
@@ -138,6 +140,7 @@ func askQuestions(mediaFiles []string, mainDir string) (UserAnswers, error) {
 		LoopFirstVideo:      false,
 		HaveTransitionVideo: false,
 		TransitionVideo:     "",
+		HashKey:             "",
 	}
 
 	answers.PlayOnlyOne = showQuestion("Do you only want to play one video? (The first random video will play once and then stop)", false)
@@ -152,7 +155,22 @@ func askQuestions(mediaFiles []string, mainDir string) (UserAnswers, error) {
 			}
 		}
 	}
+	answers.HashKey = createHashFromUserAnswers(answers)
 	return answers, nil
+}
+
+func createHashFromUserAnswers(answers UserAnswers) string {
+	s := fmt.Sprintf(
+		"%v%v%v%s%s",
+		answers.PlayOnlyOne,
+		answers.LoopFirstVideo,
+		answers.HaveTransitionVideo,
+		answers.TransitionVideo,
+		strings.Join(answers.MediaFiles[:], ""))
+
+	hasher := md5.New()
+	hasher.Write([]byte(s))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func removeTransitionVideo(transitionVideo string, mediaFiles []string) []string {

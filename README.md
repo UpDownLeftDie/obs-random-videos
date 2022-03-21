@@ -41,15 +41,15 @@ _Perfect for BRB screens!_
 - Set `Refresh browser when scene becomes active`
 - Video resolutions should match your canvas aspect ratio
 - **Autoplay only works in OBS!**
-  - ~~If you want to test this in your browser:~~ Not working in v3.3.0
-    1. ~~Open the `obs-random-videos.html` with your browser~~
-    2. ~~Right-click on the image and click "Show controls"~~
-    3. ~~Hit the play button~~
+  - If you want to test this in your browser:
+    1. Open the `obs-random-videos.html` with your browser
+    2. Right-click on the image and click "Show controls"
+    3. Hit the play button
 - Pro tip: webm videos support transparency (convert mov to webm to save on file size)
 
 ## Stuck? Or nothing happening?
 
-  1. Try hitting `Refresh cache of current page` in OBS **at least** as many time as you have videos in your playlist
+  1. Try hitting `Refresh cache of current page` in OBS
   2. [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio) and open the page for the browser source
      1. Open Chrome Dev tools
      2. `Application` tab

@@ -3,7 +3,11 @@ const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\"
 const transitionVideoPath = /** @type {string} */("{{ .TransitionVideo }}");
 const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
 const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
+const hashKey = /** @type {string} */("{{ .HashKey }}");
+// @ts-ignore
+const isOBS = !!window?.obsstudio?.pluginVersion
 let isTransition = true;
+
 
 /**
  * shuffleArr takes in an array and returns a new array in random order
@@ -28,7 +32,7 @@ function shuffleArr(originalArray) {
  * @returns {void}
  */
 function storePlaylistState(state) {
-  localStorage.setItem('playlist', JSON.stringify(state));
+  localStorage.setItem(`playlist-${hashKey}`, JSON.stringify(state));
 }
 
 /**
@@ -49,9 +53,9 @@ function getNewPlaylist() {
 function getPlaylist() {
   let playlist = [];
   try {
-    playlist = JSON.parse(localStorage.getItem('playlist'));
+    playlist = JSON.parse(localStorage.getItem(`playlist-${hashKey}`));
   } catch {
-    console.log('playlist doesn\'t exist yet!');
+    console.debug('playlist doesn\'t exist yet!');
   }
   if (!playlist || playlist.length === 0 || typeof playlist.pop === 'undefined') {
     playlist = getNewPlaylist();
@@ -80,12 +84,20 @@ function getNextPlaylistItem() {
   const playlist = getPlaylist();
   let mediaItem = playlist.pop();
 
+  console.debug({
+    lastPlayed: localStorage.getItem(`lastPlayed-${hashKey}`),
+    mediaItem,
+    wasLastPlayed: localStorage.getItem(`lastPlayed-${hashKey}`) === mediaItem
+  });
+
   // check if we played this mediaItem last run
-  console.log({ lastPlayed: localStorage.getItem('lastPlayed'), mediaItem, wasLastPlayed: localStorage.getItem('lastPlayed') === mediaItem });
-  if (localStorage.getItem('lastPlayed') === mediaItem) {
+  if (localStorage.getItem(`lastPlayed-${hashKey}`) === mediaItem) {
     // moves the repeated item to the end so its not skipped entirely
     storePlaylistState([mediaItem].concat(playlist));
     mediaItem = getNextPlaylistItem();
+  }
+  if (isOBS) {
+    mediaItem = `http://absolute/${mediaItem}`;
   }
   return mediaItem;
 }
@@ -102,13 +114,13 @@ function playNext(player, nextPlayer) {
   const nextMp4Source = nextPlayer.getElementsByClassName('mp4Source')[0];
   const currentVideo = currentMp4Source.getAttribute('src');
   if (currentVideo !== transitionVideoPath) {
-    localStorage.setItem('lastPlayed', currentVideo);
+    localStorage.setItem(`lastPlayed-${hashKey}`, currentVideo);
   }
 
-  let video = localStorage.getItem('lastPlayed');
+  let video = localStorage.getItem(`lastPlayed-${hashKey}`);
   if (!loopFirstVideo && (!transitionVideoPath || !isTransition)) {
     video = getNextPlaylistItem();
-    console.log(`next video: ${video}`);
+    console.debug(`next video: ${video}`);
   }
 
   // TODO: we can use this opacity to crossfade between mediaFiles
