@@ -6,6 +6,12 @@ const player = /** @type {HTMLMediaElement} */ (
 const player2 = /** @type {HTMLMediaElement} */ (
   document.getElementById('videoPlayer2')
 );
+
+if (!isOBS) {
+  player.setAttribute('controls', "true");
+  player2.setAttribute('controls', "true");
+}
+
 player.addEventListener(
   'ended',
   () => {
