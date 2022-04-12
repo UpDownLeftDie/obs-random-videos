@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"text/template"
 	"time"
@@ -126,9 +125,8 @@ func getMediaFiles(currentDir string) []string {
 
 func fixFilePath(filePath string) string {
 	separator := string(os.PathSeparator)
-	if runtime.GOOS == "windows" {
-		separatorEscaped := strings.Repeat(separator, 2)
-		return strings.Replace(filePath, separator, separatorEscaped, -1)
+	if separator != "/" {
+		return strings.Replace(filePath, separator, "/", -1)
 	}
 	return filePath
 }

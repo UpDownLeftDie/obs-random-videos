@@ -7,10 +7,10 @@ const hashKey = /** @type {string} */("{{ .HashKey }}");
 // @ts-ignore
 const isOBS = !!window?.obsstudio?.pluginVersion
 const OBS_FILE_PREFIX = 'http://absolute/';
-if (isOBS) {
+if (isOBS && transitionVideoPath) {
   transitionVideoPath = `${OBS_FILE_PREFIX}${transitionVideoPath}`;
 }
-let isTransition = true;
+let isTransition = true; // this is true on init on purpose
 
 
 /**
@@ -158,6 +158,12 @@ function playNext(currentPlayer, nextPlayer) {
     };
   }
 
+
+  /**
+ * handleLoadedData event listener for data to load will play the video on HAVE_CURRENT_DATA
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+ * @returns {void}
+ */
   const handleLoadedData = function() {
     if (currentPlayer.readyState >= 2) {
       currentPlayer.play();
