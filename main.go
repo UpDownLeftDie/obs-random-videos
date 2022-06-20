@@ -28,7 +28,7 @@ var mainScript string
 //go:embed js/body.js
 var bodyScript string
 
-var VERSION = "@@VERSION@@" // Used with github action string replace to inject release version here
+var version = "DEV"
 
 // UserAnswers holds config answers from command line prompt ui
 type UserAnswers struct {
@@ -63,7 +63,7 @@ var (
 )
 
 func main() {
-	fmt.Printf("OBS Random Video: %s\n\n", VERSION);
+	fmt.Printf("OBS Random Video: %s\n\n", version);
 	mainDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatalf("Failed to get current directory path: %v", err)
@@ -85,7 +85,7 @@ func main() {
 		answers.MediaFiles = removeTransitionVideo(answers.TransitionVideo, answers.MediaFiles)
 	}
 
-	templateHTML = "<!--\nOBS Random Videos: "+VERSION+"\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
+	templateHTML = "<!--\nOBS Random Videos: "+version+"\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
 	var outputHTML bytes.Buffer
 	t := template.Must(template.New("HTML").Parse(templateHTML))
 	err = t.Execute(&outputHTML, scripts)
