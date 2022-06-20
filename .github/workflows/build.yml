@@ -25,11 +25,14 @@ jobs:
         run: echo '${{ env.branch_name }}'
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           find: "@@VERSION@@"
           replace: ${{ env.branch_name }}
           include: main.go
           regex: false
+      - name: gitignore main.go after version injection
+        run: echo "\nmain.go" >> .gitignore
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
