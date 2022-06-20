@@ -1,16 +1,12 @@
 // @ts-check
 const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\", \"" }}"]);
-let transitionVideoPath = /** @type {string} */("{{ .TransitionVideo }}");
+const transitionVideoPath = /** @type {string} */("{{ .TransitionVideo }}");
 const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
 const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
 const hashKey = /** @type {string} */("{{ .HashKey }}");
 // @ts-ignore
 const isOBS = !!window?.obsstudio?.pluginVersion
-const OBS_FILE_PREFIX = 'http://absolute/';
-if (isOBS && transitionVideoPath) {
-  transitionVideoPath = `${OBS_FILE_PREFIX}${transitionVideoPath}`;
-}
-let isTransition = true; // this is true on init on purpose
+let isTransition = true; // set true for init on purpose
 
 
 /**
@@ -99,9 +95,6 @@ function getNextPlaylistItem() {
     // moves the repeated item to the end so its not skipped entirely
     storePlaylistState([mediaItem].concat(playlist));
     mediaItem = getNextPlaylistItem();
-  }
-  if (isOBS) {
-    mediaItem = `${OBS_FILE_PREFIX}${mediaItem}`;
   }
   return mediaItem;
 }
