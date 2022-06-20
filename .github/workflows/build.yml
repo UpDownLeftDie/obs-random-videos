@@ -20,12 +20,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Release Version
-        run: echo ${{ github.ref }}
+        run: echo ${{ github.ref.name }}
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v2
         with:
           find: "@@VERSION@@"
-          replace: ${{ github.ref }}
+          replace: ${{ github.ref.name }}
+          include: main.go
           regex: false
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -40,7 +41,7 @@ jobs:
             ${{ runner.os }}-go-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref.type == 'tag'
         with:
           version: latest
           args: release --rm-dist
