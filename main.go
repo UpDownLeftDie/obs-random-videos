@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"text/template"
 	"time"
@@ -29,7 +28,9 @@ var mainScript string
 //go:embed js/body.js
 var bodyScript string
 
-// UserAnswers holds config answers from comand line prompt ui
+var VERSION = "@@VERSION@@" // Used with github action string replace to inject release version here
+
+// UserAnswers holds config answers from command line prompt ui
 type UserAnswers struct {
 	MediaFolder         string
 	MediaFiles          []string
@@ -58,10 +59,11 @@ var (
 	// imagesFileExts = []string{".png", ".jpg", ".jpeg", ".gif", ".webp"}
 	// mediaFileExts  = append(append(audioFileExts, videoFileExts...), imagesFileExts...)
 	mediaFileExts = append(audioFileExts, videoFileExts...)
-	promptDelay   = 100 * time.Millisecond // helps with race conditionsin promptui
+	promptDelay   = 100 * time.Millisecond // helps with race conditions in promptui
 )
 
 func main() {
+	fmt.Printf("OBS Random Video: %s\n\n", VERSION);
 	mainDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatalf("Failed to get current directory path: %v", err)
@@ -83,7 +85,7 @@ func main() {
 		answers.MediaFiles = removeTransitionVideo(answers.TransitionVideo, answers.MediaFiles)
 	}
 
-	templateHTML = "<!--\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
+	templateHTML = "<!--\nOBS Random Videos: "+VERSION+"\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
 	var outputHTML bytes.Buffer
 	t := template.Must(template.New("HTML").Parse(templateHTML))
 	err = t.Execute(&outputHTML, scripts)
@@ -126,9 +128,8 @@ func getMediaFiles(currentDir string) []string {
 
 func fixFilePath(filePath string) string {
 	separator := string(os.PathSeparator)
-	if runtime.GOOS == "windows" {
-		separatorEscaped := strings.Repeat(separator, 2)
-		return strings.Replace(filePath, separator, separatorEscaped, -1)
+	if separator != "/" {
+		return strings.Replace(filePath, separator, "/", -1)
 	}
 	return filePath
 }

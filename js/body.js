@@ -45,6 +45,5 @@ let video = getNextPlaylistItem();
 progressPlaylistState();
 
 mp4Source.setAttribute('src', video);
-player.load();
 
 playNext(player, player2);

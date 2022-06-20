@@ -16,22 +16,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Get Branch Name
+        run: echo "branch_name=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+      - name: Echo Branch Name
+        run: echo '${{ env.branch_name }}'
+      - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v2
         with:
-          go-version: 1.16
+          find: "@@VERSION@@"
+          replace: ${{ env.branch_name }}
+          include: main.go
+          regex: false
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
       - name: Cache Go modules
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           version: latest

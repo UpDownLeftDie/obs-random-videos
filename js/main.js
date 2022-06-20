@@ -6,7 +6,7 @@ const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
 const hashKey = /** @type {string} */("{{ .HashKey }}");
 // @ts-ignore
 const isOBS = !!window?.obsstudio?.pluginVersion
-let isTransition = true;
+let isTransition = true; // set true for init on purpose
 
 
 /**
@@ -96,23 +96,21 @@ function getNextPlaylistItem() {
     storePlaylistState([mediaItem].concat(playlist));
     mediaItem = getNextPlaylistItem();
   }
-  if (isOBS) {
-    mediaItem = `http://absolute/${mediaItem}`;
-  }
   return mediaItem;
 }
 
 /**
  * playNext is the core function of this project and handles the loading and
  *   playing of the alternating video players
- * @param {HTMLMediaElement} player currently playing video player
+ * @param {HTMLMediaElement} currentPlayer currently playing video player
  * @param {HTMLMediaElement} nextPlayer the next video player to be played
  * @returns {void}
  */
-function playNext(player, nextPlayer) {
-  const currentMp4Source = player.getElementsByClassName('mp4Source')[0];
-  const nextMp4Source = nextPlayer.getElementsByClassName('mp4Source')[0];
+function playNext(currentPlayer, nextPlayer) {
+  const currentMp4Source = /** @type {HTMLSourceElement} */(currentPlayer.getElementsByClassName('mp4Source')[0]);
+  const nextMp4Source  =  /** @type {HTMLSourceElement} */(nextPlayer.getElementsByClassName('mp4Source')[0]);
   const currentVideo = currentMp4Source.getAttribute('src');
+  currentPlayer.load();
   if (currentVideo !== transitionVideoPath) {
     localStorage.setItem(`lastPlayed-${hashKey}`, currentVideo);
   }
@@ -124,8 +122,8 @@ function playNext(player, nextPlayer) {
   }
 
   // TODO: we can use this opacity to crossfade between mediaFiles
-  player.style['z-index'] = 1;
-  player.style['opacity'] = '1';
+  currentPlayer.style['z-index'] = 1;
+  currentPlayer.style['opacity'] = '1';
   nextPlayer.style['z-index'] = 0;
   nextPlayer.style['opacity'] = '0';
 
@@ -135,19 +133,40 @@ function playNext(player, nextPlayer) {
   } else {
     isTransition = true;
   }
+
+  nextMp4Source.src = ''
+  nextMp4Source.removeAttribute('src'); // empty source
+
+
   nextMp4Source.setAttribute('src', video);
   nextPlayer.load();
-  nextPlayer.pause();
 
   if (playOnlyOne) {
     // Remove videos after playing once
-    player.onended = () => {
+    currentPlayer.onended = () => {
+      currentMp4Source.src = '';
       currentMp4Source.removeAttribute('src');
+      nextMp4Source.src = '';
       nextMp4Source.removeAttribute('src');
-      player.load();
-      nextPlayer.load();
     };
   }
 
-  player.play();
+
+  /**
+ * handleLoadedData event listener for data to load will play the video on HAVE_CURRENT_DATA
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+ * @returns {void}
+ */
+  const handleLoadedData = function() {
+    if (currentPlayer.readyState >= 2) {
+      currentPlayer.play();
+      currentPlayer.removeEventListener('loadeddata', handleLoadedData, false);
+    }
+   }
+
+   if (currentPlayer.readyState >= 2) {
+     currentPlayer.play();
+   } else {
+     currentPlayer.addEventListener('loadeddata', handleLoadedData, false);
+   }
 }

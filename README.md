@@ -4,6 +4,8 @@ Play videos in random order!
 
 _Perfect for BRB screens!_
 
+Notice: the VLC Source now supports "Shuffle playlist" option.
+
 ## [Download](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
 
 ### [Chat Support](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum)
@@ -15,10 +17,15 @@ _Perfect for BRB screens!_
 3. Run the file and follow the prompts for your settings
 4. A new file called `obs-random-videos.html` will be created in the same folder
 5. Add a new `Browser Source` to OBS
-   1. Set it to "Local File" and select the new `obs-random-videos.html` you just created
-   2. Set the width and height to your full canvas resolution
-   3. Check "Shutdown source when not visible"
-   4. If you want a new shuffle each time: check "Refresh browser when scene becomes active"
+   1. Check "Local File" and select the new `obs-random-videos.html` you just created.
+   2. **Copy this path**
+   3. **Uncheck "Local file" and set the url to `file://<paste the path you copied>`**
+      1. Windows example: `file://C:/obs-videos-folder/obs-random-videos.html`
+      2. Mac/Linux example: `file:///obs-videos-folder/obs-random-videos.html` (note the `///`)
+   4. Set the width and height to your full canvas resolution
+   5. Check "Shutdown source when not visible"
+   6. If you want a new shuffle each time: check "Refresh browser when scene becomes active"
+   7. Leave "Page permissions" set to "Read access to OBS status information"
 6. Rerun the executable to change any settings
 
 ### Supported files
@@ -38,13 +45,13 @@ _Perfect for BRB screens!_
 
 ## Notes
 
+- VLC Source now supports "Shuffle playlist"
+  - This may be a more stable alternative to this project
+  - Mac's with M1 chip: Install the Intel version of VLC to use the VLC plugin
 - Set `Refresh browser when scene becomes active`
 - Video resolutions should match your canvas aspect ratio
 - **Autoplay only works in OBS!**
-  - If you want to test this in your browser:
-    1. Open the `obs-random-videos.html` with your browser
-    2. Right-click on the image and click "Show controls"
-    3. Hit the play button
+  - To test in your browser you must hit the Play button first
 - Pro tip: webm videos support transparency (convert mov to webm to save on file size)
 
 ## Stuck? Or nothing happening?
