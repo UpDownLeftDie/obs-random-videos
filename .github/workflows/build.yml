@@ -19,13 +19,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Release Version
-        run: echo ${{ github.ref.name }}
+      - name: Get Branch Name
+        run: echo "branch_name=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+      - name: Echo Branch Name
+        run: echo '${{ env.branch_name }}'
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v2
         with:
           find: "@@VERSION@@"
-          replace: ${{ github.ref.name }}
+          replace: ${{ env.branch_name }}
           include: main.go
           regex: false
       - name: Set up Go
@@ -41,7 +43,7 @@ jobs:
             ${{ runner.os }}-go-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
-        if: github.ref.type == 'tag'
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           version: latest
           args: release --rm-dist
