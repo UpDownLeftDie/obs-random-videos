@@ -62,7 +62,7 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
      2. `Application` tab
      3. Make sure `Local and session storage` box is CHECKED
      4. Click `Clear site data`
-  3. If issues persist: join the [Discord server](https://discord.gg/zxYsjpxaxN)
+  3. If issues persist: use [GitHub Discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions/categories/q-a) or join the [Discord server](https://discord.gg/zxYsjpxaxN)
 
 ## TODO
 
