@@ -8,7 +8,7 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
 
 ## [Download](https://github.com/UpDownLeftDie/obs-random-videos/releases/latest)
 
-### [Chat Support](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum)
+### [Discord Support](https://discord.gg/zxYsjpxaxN)
 
 ## Instructions
 
@@ -62,7 +62,7 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
      2. `Application` tab
      3. Make sure `Local and session storage` box is CHECKED
      4. Click `Clear site data`
-  3. If issues persist: join the [Guilded server](https://www.guilded.gg/i/pWrnl1qk?cid=377fa0a0-d505-4616-92cc-00d1d9f4e925&intent=forum)
+  3. If issues persist: use [GitHub Discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions/categories/q-a) or join the [Discord server](https://discord.gg/zxYsjpxaxN)
 
 ## TODO
 
