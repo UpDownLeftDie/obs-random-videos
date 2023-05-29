@@ -4,9 +4,10 @@ custom:
     'https://www.twitch.tv/subs/updownleftdie',
     'https://cash.app/$UpDownLeftDie/FPBDPCH',
     'https://www.paypal.me/jaredkotoff',
+    'https://next.invitation.codes/@updownleftdie'
   ]
 github: # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
-patreon: 
+patreon:
 open_collective: # Replace with a single Open Collective username
 ko_fi: jaredk
 tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel

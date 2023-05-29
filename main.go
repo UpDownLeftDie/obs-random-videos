@@ -169,7 +169,8 @@ func createHashFromUserAnswers(answers UserAnswers) string {
 		answers.TransitionVideo,
 		strings.Join(answers.MediaFiles[:], ""))
 
-	hasher := md5.New()
+	// deepcode ignore InsecureHash: Not using this hash for anything sensitive
+ 	hasher := md5.New()
 	hasher.Write([]byte(s))
 	return hex.EncodeToString(hasher.Sum(nil))
 }

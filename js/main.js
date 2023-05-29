@@ -5,14 +5,15 @@ const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
 const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
 const hashKey = /** @type {string} */("{{ .HashKey }}");
 // @ts-ignore
-const isOBS = !!window?.obsstudio?.pluginVersion
+const isOBS = !!(window?.obsstudio?.pluginVersion);
 let isTransition = true; // set true for init on purpose
 
 
 /**
  * shuffleArr takes in an array and returns a new array in random order
- * @param {any[]} originalArray any array to be shuffled
- * @return {any[]} shuffled array
+ * @template T
+ * @param {T[]} originalArray any array to be shuffled
+ * @return {T[]} shuffled array
  */
 function shuffleArr(originalArray) {
   let a = [...originalArray]
@@ -52,12 +53,8 @@ function getNewPlaylist() {
  */
 function getPlaylist() {
   let playlist = [];
-  try {
-    playlist = JSON.parse(localStorage.getItem(`playlist-${hashKey}`));
-  } catch {
-    console.debug('playlist doesn\'t exist yet!');
-  }
-  if (!playlist || playlist.length === 0 || typeof playlist.pop === 'undefined') {
+  playlist = JSON.parse(localStorage.getItem(`playlist-${hashKey}`) || '[]');
+  if (!playlist?.length || typeof playlist.pop === 'undefined') {
     playlist = getNewPlaylist();
   }
   return playlist;
@@ -82,7 +79,7 @@ function progressPlaylistState() {
  */
 function getNextPlaylistItem() {
   const playlist = getPlaylist();
-  let mediaItem = playlist.pop();
+  let mediaItem = playlist.pop() || '';
 
   console.debug({
     lastPlayed: localStorage.getItem(`lastPlayed-${hashKey}`),
@@ -110,15 +107,16 @@ function playNext(currentPlayer, nextPlayer) {
   const currentMp4Source = /** @type {HTMLSourceElement} */(currentPlayer.getElementsByClassName('mp4Source')[0]);
   const nextMp4Source  =  /** @type {HTMLSourceElement} */(nextPlayer.getElementsByClassName('mp4Source')[0]);
   const currentVideo = currentMp4Source.getAttribute('src');
+
   currentPlayer.load();
-  if (currentVideo !== transitionVideoPath) {
+  if (currentVideo && currentVideo !== transitionVideoPath) {
     localStorage.setItem(`lastPlayed-${hashKey}`, currentVideo);
   }
 
-  let video = localStorage.getItem(`lastPlayed-${hashKey}`);
+  let videoSrc = localStorage.getItem(`lastPlayed-${hashKey}`) || '';
   if (!loopFirstVideo && (!transitionVideoPath || !isTransition)) {
-    video = getNextPlaylistItem();
-    console.debug(`next video: ${video}`);
+    videoSrc = getNextPlaylistItem();
+    console.debug(`next video: ${videoSrc}`);
   }
 
   // TODO: we can use this opacity to crossfade between mediaFiles
@@ -128,7 +126,7 @@ function playNext(currentPlayer, nextPlayer) {
   nextPlayer.style['opacity'] = '0';
 
   if (transitionVideoPath && transitionVideoPath !== '' && isTransition) {
-    video = transitionVideoPath;
+    videoSrc = transitionVideoPath;
     isTransition = false;
   } else {
     isTransition = true;
@@ -138,8 +136,10 @@ function playNext(currentPlayer, nextPlayer) {
   nextMp4Source.removeAttribute('src'); // empty source
 
 
-  nextMp4Source.setAttribute('src', video);
-  nextPlayer.load();
+  if (videoSrc) {
+    nextMp4Source.setAttribute('src', videoSrc);
+    nextPlayer.load();
+  }
 
   if (playOnlyOne) {
     // Remove videos after playing once
@@ -157,14 +157,14 @@ function playNext(currentPlayer, nextPlayer) {
  * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
  * @returns {void}
  */
-  const handleLoadedData = function() {
-    if (currentPlayer.readyState >= 2) {
+  function handleLoadedData() {
+    if (currentPlayer.readyState >= 3) {
       currentPlayer.play();
       currentPlayer.removeEventListener('loadeddata', handleLoadedData, false);
     }
    }
 
-   if (currentPlayer.readyState >= 2) {
+   if (currentPlayer.readyState >= 3) {
      currentPlayer.play();
    } else {
      currentPlayer.addEventListener('loadeddata', handleLoadedData, false);

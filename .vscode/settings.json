@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "deepcode",
     "goarch",
     "gohtml",
     "goreleaser",
@@ -8,7 +9,9 @@
     "ldflags",
     "manifoldco",
     "obsstudio",
-    "promptui"
+    "promptui",
+    "sparkdemcisin",
+    "webp"
   ],
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": [
