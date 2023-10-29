@@ -16,7 +16,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sparkdemcisin81/promptui" // using this instead of manifoldco because of weird bugs 🤷‍♂️
+	"github.com/1lann/promptui" // using this instead of manifoldco because of race conditions and weird bugs 🤷‍♂️
 )
 
 //go:embed template.gohtml
@@ -63,7 +63,7 @@ var (
 )
 
 func main() {
-	fmt.Printf("OBS Random Video: %s\n\n", version);
+	fmt.Printf("OBS Random Video: %s\n\n", version)
 	mainDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Fatalf("Failed to get current directory path: %v", err)
@@ -85,7 +85,7 @@ func main() {
 		answers.MediaFiles = removeTransitionVideo(answers.TransitionVideo, answers.MediaFiles)
 	}
 
-	templateHTML = "<!--\nOBS Random Videos: "+version+"\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
+	templateHTML = "<!--\nOBS Random Videos: " + version + "\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
 	var outputHTML bytes.Buffer
 	t := template.Must(template.New("HTML").Parse(templateHTML))
 	err = t.Execute(&outputHTML, scripts)
@@ -98,7 +98,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed compiling template final: %v", err)
 	}
-	outputHTMLFile, err := os.Create(outputHTMLName)
+
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	outputHTMLFilePath := filepath.Join(exPath, outputHTMLName)
+	outputHTMLFile, err := os.Create(outputHTMLFilePath)
 	if err != nil {
 		log.Fatalf("Failed create output file: %v", err)
 	}
@@ -170,7 +177,7 @@ func createHashFromUserAnswers(answers UserAnswers) string {
 		strings.Join(answers.MediaFiles[:], ""))
 
 	// deepcode ignore InsecureHash: Not using this hash for anything sensitive
- 	hasher := md5.New()
+	hasher := md5.New()
 	hasher.Write([]byte(s))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
