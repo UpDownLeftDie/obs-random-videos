@@ -77,7 +77,7 @@ function progressPlaylistState() {
  *  next item after that
  * @returns {string} the next item in the playlist
  */
-function getNextPlaylistItem() {
+function getNextPlaylistItem(returnEncoded = true) {
   const playlist = getPlaylist();
   let mediaItem = playlist.pop() || '';
 
@@ -91,7 +91,15 @@ function getNextPlaylistItem() {
   if (localStorage.getItem(`lastPlayed-${hashKey}`) === mediaItem) {
     // moves the repeated item to the end so its not skipped entirely
     storePlaylistState([mediaItem].concat(playlist));
-    mediaItem = getNextPlaylistItem();
+    mediaItem = getNextPlaylistItem(false);
+  }
+
+  if (returnEncoded) {
+    const parts = mediaItem.split('/');
+    // @ts-ignore
+    const file = encodeURIComponent(parts.pop());
+    const path = `${encodeURI(parts.join('/'))}`;
+    mediaItem = `${path}/${file}`;
   }
   return mediaItem;
 }

@@ -74,3 +74,4 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
 - Option to HTML background color
   - Good for videos with weird aspect ratio
   - Good for audio files
+- Switch to [Bubble Tea](https://github.com/charmbracelet/bubbletea) instead of `promptui`
