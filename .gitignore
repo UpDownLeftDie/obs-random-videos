@@ -1,9 +1,32 @@
-node_modules
-bin
-test*
+# Binaries and executables
+node_modules/
+bin/
+test*/
 obs-random-video*
 *.7z
 *.exe
 *-linux
 *-macos
+*.html
+
+# OS specific files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and editor files
+.idea/
+*.swp
+*.swo
+*~
+
+# Build and distribution files
+dist/
+build/
+
+# Logs
+*.log
+
+# Generated files
+web/js/*.min.js
+web/css/*.min.css
