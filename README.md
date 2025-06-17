@@ -36,12 +36,41 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
 - m4v
 - webm
 - mpeg4
+- mov
 
 #### Audio
 
 - mp3
 - ogg
 - aac
+
+## Project Structure
+
+The project is organized into the following directories:
+
+- `internal/` - Internal packages not meant for external use
+  - `media/` - Media file handling functions (file detection, path handling)
+  - `ui/` - User interface and template functions (prompts, HTML generation)
+- `web/` - Web assets
+  - `js/` - JavaScript files for the HTML player
+    - `main.js` - Contains the VideoPlayerManager and PlaylistManager classes
+    - `body.js` - Initializes the player
+  - `templates/` - HTML templates
+
+### JavaScript Architecture
+
+The JavaScript code uses an object-oriented approach with two main classes:
+
+1. **VideoPlayerManager**: Handles the dual-player system for seamless video playback
+   - Manages the two video players
+   - Handles transitions between videos
+   - Provides error handling
+   - Implements preloading for better performance
+
+2. **PlaylistManager**: Manages the playlist state and operations
+   - Handles shuffling of videos
+   - Manages localStorage for persistence
+   - Provides methods for getting the next video
 
 ## Notes
 
@@ -54,24 +83,33 @@ Notice: the VLC Source now supports "Shuffle playlist" option.
   - To test in your browser you must hit the Play button first
 - Pro tip: webm videos support transparency (convert mov to webm to save on file size)
 
-## Stuck? Or nothing happening?
+## Troubleshooting
 
-  1. Try hitting `Refresh cache of current page` in OBS
-  2. **In OBS go to `Scene Collection` then `New`**
-     1. **Add only your random video browser source and see if this works**
-     2. **If it works, then theres an external issue.** I have no idea what is causing this so, if you have any info on this us know in the [discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions)
-  3. [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio) and open the page for the browser source
-     1. Open Chrome Dev tools
-     2. `Application` tab
-     3. Make sure `Local and session storage` box is CHECKED
-     4. Click `Clear site data`
-  4. If issues persist: use [GitHub Discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions/categories/q-a) or join the [Discord server](https://discord.gg/zxYsjpxaxN)
+If you're experiencing issues with the player:
+
+1. Try hitting `Refresh cache of current page` in OBS
+2. **In OBS go to `Scene Collection` then `New`**
+   1. **Add only your random video browser source and see if this works**
+   2. **If it works, then theres an external issue.** I have no idea what is causing this so, if you have any info on this us know in the [discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions)
+3. [Enable remote debugging](https://github.com/crowbartools/Firebot/wiki/Troubleshooting-Firebot-Overlay-issues-in-OBS-Studio) and open the page for the browser source
+   1. Open Chrome Dev tools
+   2. `Application` tab
+   3. Make sure `Local and session storage` box is CHECKED
+   4. Click `Clear site data`
+4. Check if your video files are in a supported format and can be played in a browser
+5. Ensure your video files don't have special characters in their filenames
+6. If issues persist: use [GitHub Discussions](https://github.com/UpDownLeftDie/obs-random-videos/discussions/categories/q-a) or join the [Discord server](https://discord.gg/zxYsjpxaxN)
 
 ## TODO
 
-- Audio-only or video-only modes
-- Option for cross-fading between videos
-- Option to HTML background color
+- [x] Support for multiple video formats
+- [x] Support for audio files
+- [x] Switch to [Bubble Tea](https://github.com/charmbracelet/bubbletea)
+- [ ] Audio-only or video-only modes
+- [ ] Option for cross-fading between videos
+- [ ] Option to set HTML background color
   - Good for videos with weird aspect ratio
   - Good for audio files
-- Switch to [Bubble Tea](https://github.com/charmbracelet/bubbletea) instead of `promptui`
+- [ ] Switch to [Wails](https://wails.io/) UI for a graphical interface
+- [ ] Add support for image files (with configurable display duration)
+- [ ] Improve error handling and user feedback

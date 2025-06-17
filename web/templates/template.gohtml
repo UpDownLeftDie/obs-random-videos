@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Random Videos</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #error {
+        color: red;
+        font-weight: bolder;
+        font-size: 2.5rem;
+        background-color: white;
+        padding: 0.5rem;
+      }
+      video {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        min-width: 100%;
+        min-height: 100%;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video id="videoPlayer2" width="100%" height="100%" style="z-index: 0; opacity: 0;">
+      <source src="" type="video/mp4" />
+    </video>
+    <video id="videoPlayer1" width="100%" height="100%" style="z-index: 1; opacity: 1;">
+      <source src="" type="video/mp4" />
+    </video>
+    <script>
+      {{ .MainScript }}
+    </script>
+    <script>
+      // Add muted attribute for non-OBS environments to allow autoplay
+      if (!isOBS) {
+        document.getElementById('videoPlayer1').muted = true;
+        document.getElementById('videoPlayer2').muted = true;
+      }
+      
+      {{ .BodyScript }}
+    </script>
+  </body>
+</html>
