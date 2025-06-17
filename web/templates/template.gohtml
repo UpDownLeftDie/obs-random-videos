@@ -1,8 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <script>
-      {{ .MainScript }}
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Random Videos</title>
     <style>
       html,
       body {
@@ -41,6 +42,15 @@
       <source src="" type="video/mp4" />
     </video>
     <script>
+      {{ .MainScript }}
+    </script>
+    <script>
+      // Add muted attribute for non-OBS environments to allow autoplay
+      if (!isOBS) {
+        document.getElementById('videoPlayer1').muted = true;
+        document.getElementById('videoPlayer2').muted = true;
+      }
+      
       {{ .BodyScript }}
     </script>
   </body>

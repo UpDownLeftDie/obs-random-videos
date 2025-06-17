@@ -5,6 +5,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	htmltemplate "html/template"
+	"net/url"
 	"strings"
 	"text/template"
 )
@@ -30,7 +32,7 @@ func GenerateHTML(templateHTML string, scripts Scripts, answers UserAnswers) (st
 	// Add version header
 	templateHTML = "<!--\nOBS Random Videos\nAUTO GENERATED FILE\nDON'T TOUCH\n-->\n" + templateHTML
 
-	// First pass: inject scripts
+	// First pass: inject scripts using text/template to avoid JavaScript parsing issues
 	var outputHTML bytes.Buffer
 	t := template.Must(template.New("HTML").Parse(templateHTML))
 	err := t.Execute(&outputHTML, scripts)
@@ -38,10 +40,37 @@ func GenerateHTML(templateHTML string, scripts Scripts, answers UserAnswers) (st
 		return "", fmt.Errorf("failed compiling template: %w", err)
 	}
 
-	// Second pass: inject user answers
-	t = template.Must(template.New("HTML").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(outputHTML.String()))
+	// Second pass: inject user answers using html/template for proper escaping
+	funcMap := htmltemplate.FuncMap{
+		"StringsJoin": func(items []string, sep string) htmltemplate.JS {
+			// Properly escape each string for JavaScript
+			escapedItems := make([]string, len(items))
+			for i, item := range items {
+				// Split path and encode each part properly for URIs
+				parts := strings.Split(item, "/")
+				encodedParts := make([]string, len(parts))
+				for j, part := range parts {
+					encodedParts[j] = url.PathEscape(part)
+				}
+				encodedPath := strings.Join(encodedParts, "/")
+				escapedItems[i] = "\"" + htmltemplate.JSEscapeString(encodedPath) + "\""
+			}
+			return htmltemplate.JS(strings.Join(escapedItems, sep))
+		},
+		"JSEscape": func(s string) htmltemplate.JS {
+			// Pre-encode path for URI compatibility, then escape for JavaScript
+			parts := strings.Split(s, "/")
+			encodedParts := make([]string, len(parts))
+			for i, part := range parts {
+				encodedParts[i] = url.PathEscape(part)
+			}
+			encodedPath := strings.Join(encodedParts, "/")
+			return htmltemplate.JS("\"" + htmltemplate.JSEscapeString(encodedPath) + "\"")
+		},
+	}
+	htmlt := htmltemplate.Must(htmltemplate.New("HTML").Funcs(funcMap).Parse(outputHTML.String()))
 	outputHTML.Reset()
-	err = t.Execute(&outputHTML, answers)
+	err = htmlt.Execute(&outputHTML, answers)
 	if err != nil {
 		return "", fmt.Errorf("failed compiling template final: %w", err)
 	}

@@ -1,10 +1,10 @@
 // @ts-check
 // @ts-ignore
-const initMediaFiles = /** @type {string[]} */ (["{{ StringsJoin .MediaFiles "\", \"" }}"]);
-const transitionVideoPath = /** @type {string} */("{{ .TransitionVideo }}");
-const playOnlyOne = /** @type {boolean} */ ({{ .PlayOnlyOne }});
-const loopFirstVideo = /** @type {boolean} */ ({{ .LoopFirstVideo }});
-const hashKey = /** @type {string} */("{{ .HashKey }}");
+const initMediaFiles = [{{ StringsJoin .MediaFiles ", " }}];
+const transitionVideoPath = {{ JSEscape .TransitionVideo }};
+const playOnlyOne = {{ .PlayOnlyOne }};
+const loopFirstVideo = {{ .LoopFirstVideo }};
+const hashKey = {{ JSEscape .HashKey }};
 // @ts-ignore
 const isOBS = !!(window?.obsstudio?.pluginVersion);
 
@@ -25,8 +25,27 @@ class VideoPlayerManager {
     this.isTransition = true; // set true for init on purpose
     /** @type {PlaylistManager} */
     this.playlistManager = new PlaylistManager(initMediaFiles, hashKey);
+    /** @type {number|null} */
+    this.preloadTimer = null;
+    /** @type {Function[]} */
+    this.eventListenerCleanup = [];
 
     this.setupEventListeners();
+  }
+
+  /**
+   * Clean up all event listeners and timers
+   */
+  cleanup() {
+    // Clear any pending timer
+    if (this.preloadTimer) {
+      clearTimeout(this.preloadTimer);
+      this.preloadTimer = null;
+    }
+
+    // Clean up all event listeners
+    this.eventListenerCleanup.forEach(cleanupFn => cleanupFn());
+    this.eventListenerCleanup = [];
   }
 
   /**
@@ -34,32 +53,36 @@ class VideoPlayerManager {
    */
   setupEventListeners() {
     // Player 1 ended event
-    this.player1.addEventListener(
-      'ended',
-      () => {
-        if (!loopFirstVideo) {
-          this.playlistManager.progressPlaylist();
-        }
-        this.playNext(this.player2, this.player1);
-        // Preload the next video after this one starts playing
-        setTimeout(() => this.preloadNextVideo(), 1000);
-      },
-      { passive: true }
-    );
+    const player1EndedHandler = () => {
+      if (!loopFirstVideo) {
+        this.playlistManager.progressPlaylist();
+      }
+      this.playNext(this.player2, this.player1);
+      // Preload the next video after this one starts playing
+      if (this.preloadTimer) clearTimeout(this.preloadTimer);
+      this.preloadTimer = setTimeout(() => this.preloadNextVideo(), 1000);
+    };
+    
+    this.player1.addEventListener('ended', player1EndedHandler, { passive: true });
+    this.eventListenerCleanup.push(() => {
+      this.player1.removeEventListener('ended', player1EndedHandler);
+    });
 
     // Player 2 ended event
-    this.player2.addEventListener(
-      'ended',
-      () => {
-        if (!loopFirstVideo) {
-          this.playlistManager.progressPlaylist();
-        }
-        this.playNext(this.player1, this.player2);
-        // Preload the next video after this one starts playing
-        setTimeout(() => this.preloadNextVideo(), 1000);
-      },
-      { passive: true }
-    );
+    const player2EndedHandler = () => {
+      if (!loopFirstVideo) {
+        this.playlistManager.progressPlaylist();
+      }
+      this.playNext(this.player1, this.player2);
+      // Preload the next video after this one starts playing
+      if (this.preloadTimer) clearTimeout(this.preloadTimer);
+      this.preloadTimer = setTimeout(() => this.preloadNextVideo(), 1000);
+    };
+    
+    this.player2.addEventListener('ended', player2EndedHandler, { passive: true });
+    this.eventListenerCleanup.push(() => {
+      this.player2.removeEventListener('ended', player2EndedHandler);
+    });
 
     // Add error handling for both players
     this.setupErrorHandling(this.player1);
@@ -79,10 +102,23 @@ class VideoPlayerManager {
   setupErrorHandling(player) {
     const sources = player.querySelectorAll('source');
     sources.forEach(source => {
-      source.addEventListener('error', this.handleMediaError);
-      source.addEventListener('stalled', this.handleMediaError);
-      source.addEventListener('suspend', this.handleMediaError);
-      source.addEventListener('waiting', this.handleMediaError);
+      const errorHandler = this.handleMediaError.bind(this);
+      const stalledHandler = this.handleMediaError.bind(this);
+      const suspendHandler = this.handleMediaError.bind(this);
+      const waitingHandler = this.handleMediaError.bind(this);
+
+      source.addEventListener('error', errorHandler);
+      source.addEventListener('stalled', stalledHandler);
+      source.addEventListener('suspend', suspendHandler);
+      source.addEventListener('waiting', waitingHandler);
+
+      // Store cleanup functions
+      this.eventListenerCleanup.push(() => {
+        source.removeEventListener('error', errorHandler);
+        source.removeEventListener('stalled', stalledHandler);
+        source.removeEventListener('suspend', suspendHandler);
+        source.removeEventListener('waiting', waitingHandler);
+      });
     });
   }
 
@@ -102,12 +138,23 @@ class VideoPlayerManager {
         console.error(errorStr);
         if (isOBS) break;
 
-        const errorText = document.createTextNode(errorStr);
-        const error = document.createElement('h1');
-        error.setAttribute('id', 'error');
-        error.appendChild(errorText);
-        document.body.innerHTML = '';
-        document.body.appendChild(error);
+        // Avoid DOM thrashing by only replacing if error element doesn't exist
+        let errorElement = document.getElementById('error');
+        if (!errorElement) {
+          const errorText = document.createTextNode(errorStr);
+          errorElement = document.createElement('h1');
+          errorElement.setAttribute('id', 'error');
+          errorElement.appendChild(errorText);
+
+          // Hide video elements instead of clearing entire body
+          const videoElements = document.querySelectorAll('video');
+          videoElements.forEach(video => video.style.display = 'none');
+
+          document.body.appendChild(errorElement);
+        } else {
+          // Update existing error message
+          errorElement.textContent = errorStr;
+        }
         break;
       case 'stalled':
       case 'suspended':
@@ -129,13 +176,12 @@ class VideoPlayerManager {
 
     // Create a preload link for the browser to fetch the video in advance
     const preloadLink = document.createElement('link');
-    preloadLink.rel = 'preload';
-    preloadLink.as = 'video';
+    preloadLink.rel = 'prefetch'; // Use prefetch instead of preload for video
     preloadLink.href = nextVideoSrc;
 
-    // Remove any existing preload links to avoid duplicates
-    const existingPreloads = document.querySelectorAll('link[rel="preload"][as="video"]');
-    existingPreloads.forEach(link => link.remove());
+    // Remove any existing prefetch links to avoid duplicates
+    const existingPrefetch = document.querySelectorAll('link[rel="prefetch"]');
+    existingPrefetch.forEach(link => link.remove());
 
     // Add the new preload link
     document.head.appendChild(preloadLink);
@@ -153,12 +199,31 @@ class VideoPlayerManager {
       const nextMp4Source = /** @type {HTMLSourceElement} */(nextPlayer.querySelector('source'));
       const currentVideo = currentMp4Source.getAttribute('src');
 
+      // Clean up current player resources before loading new content
+      currentPlayer.pause();
+      currentPlayer.currentTime = 0;
+      if (currentPlayer.src) {
+        currentPlayer.removeAttribute('src');
+        currentPlayer.load(); // Clear existing source
+      }
       // Load the current player
       currentPlayer.load();
 
       // Store the last played video if it's not the transition video
-      if (currentVideo && currentVideo !== transitionVideoPath) {
-        this.playlistManager.setLastPlayed(currentVideo);
+      // currentVideo is encoded from getAttribute('src'), so decode it for storage
+      // Also decode transitionVideoPath for comparison since both should be compared unencoded
+      if (currentVideo) {
+        const parts = currentVideo.split('/');
+        const decodedParts = parts.map(part => decodeURIComponent(part));
+        const decodedVideo = decodedParts.join('/');
+        
+        const transitionParts = transitionVideoPath.split('/');
+        const decodedTransitionParts = transitionParts.map(part => decodeURIComponent(part));
+        const decodedTransitionPath = decodedTransitionParts.join('/');
+        
+        if (decodedVideo !== decodedTransitionPath) {
+          this.playlistManager.setLastPlayed(decodedVideo);
+        }
       }
 
       let videoSrc = this.playlistManager.getLastPlayed() || '';
@@ -177,7 +242,7 @@ class VideoPlayerManager {
 
       // Handle transition video logic
       if (transitionVideoPath && transitionVideoPath !== '' && this.isTransition) {
-        videoSrc = transitionVideoPath;
+        videoSrc = transitionVideoPath; // transitionVideoPath is already encoded
         this.isTransition = false;
       } else {
         this.isTransition = true;
@@ -189,6 +254,9 @@ class VideoPlayerManager {
 
       // Set the new video source if available
       if (videoSrc) {
+        // Clean up next player resources before loading new content
+        nextPlayer.pause();
+        nextPlayer.currentTime = 0;
         nextMp4Source.setAttribute('src', videoSrc);
         nextPlayer.load();
       }
@@ -306,30 +374,50 @@ class PlaylistManager {
    * @returns {string} The next item in the playlist
    */
   getNextItem(returnEncoded = true) {
-    const playlist = this.getPlaylist();
-    let mediaItem = playlist.pop() || '';
+    let attempts = 0;
+    const maxAttempts = this.initialPlaylist.length + 1; // Prevent infinite loops
+    
+    while (attempts < maxAttempts) {
+      const playlist = this.getPlaylist();
+      let mediaItem = playlist.pop() || '';
+      
+      if (!mediaItem) {
+        // Playlist is empty, create a new one
+        this.createNewPlaylist();
+        attempts++;
+        continue;
+      }
 
-    console.debug({
-      lastPlayed: this.getLastPlayed(),
-      mediaItem,
-      wasLastPlayed: this.getLastPlayed() === mediaItem
-    });
-
-    // check if we played this mediaItem last run
-    if (this.getLastPlayed() === mediaItem) {
-      // moves the repeated item to the end so its not skipped entirely
-      this.storePlaylist([mediaItem].concat(playlist));
-      mediaItem = this.getNextItem(false);
-    }
-
-    if (returnEncoded) {
+      // Decode mediaItem for comparison since lastPlayed is stored unencoded
       const parts = mediaItem.split('/');
-      // @ts-ignore
-      const file = encodeURIComponent(parts.pop());
-      const path = `${encodeURI(parts.join('/'))}`;
-      mediaItem = `${path}/${file}`;
+      const decodedParts = parts.map(part => decodeURIComponent(part));
+      const decodedMediaItem = decodedParts.join('/');
+
+      console.debug({
+        lastPlayed: this.getLastPlayed(),
+        mediaItem: decodedMediaItem,
+        wasLastPlayed: this.getLastPlayed() === decodedMediaItem
+      });
+
+      // check if we played this mediaItem last run (compare unencoded paths)
+      if (this.getLastPlayed() === decodedMediaItem) {
+        // moves the repeated item to the end so its not skipped entirely
+        this.storePlaylist([mediaItem].concat(playlist));
+        attempts++;
+        continue;
+      }
+
+      // Found a valid item that wasn't the last played
+      // mediaItem is already pre-encoded in the template, no need for runtime encoding
+      if (!returnEncoded) {
+        // If we need the unencoded version, decode it
+        return decodedMediaItem;
+      }
+      return mediaItem;
     }
-    return mediaItem;
+
+    console.warn('Maximum attempts reached in getNextItem, returning empty string');
+    return '';
   }
 
   /**

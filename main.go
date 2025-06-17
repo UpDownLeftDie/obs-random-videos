@@ -84,8 +84,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed create output file: %v", err)
 	}
+	defer outputHTMLFile.Close()
 	outputHTMLFile.WriteString(outputHTML)
-	outputHTMLFile.Close()
 
 	fmt.Printf("\nCreated %s successfully!\n", outputHTMLName)
 	os.Exit(0)
