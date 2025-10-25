@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBS Random Videos</title>
+    <title>OBS Random Videos - {{ .Version }}</title>
     <style>
       html,
       body {
@@ -45,12 +45,13 @@
       {{ .MainScript }}
     </script>
     <script>
-      // Add muted attribute for non-OBS environments to allow autoplay
-      if (!isOBS) {
+      // Add muted attribute for browser environments to allow autoplay
+      // Streaming software handles audio separately
+      if (isBrowser) {
         document.getElementById('videoPlayer1').muted = true;
         document.getElementById('videoPlayer2').muted = true;
       }
-      
+
       {{ .BodyScript }}
     </script>
   </body>

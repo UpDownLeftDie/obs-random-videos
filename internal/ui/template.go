@@ -1,3 +1,5 @@
+// Package ui provides user interface functions for the OBS Random Videos application.
+// It handles prompting the user for configuration options and generating the HTML output.
 package ui
 
 import (
@@ -19,6 +21,7 @@ type UserAnswers struct {
 	HaveTransitionVideo bool
 	TransitionVideo     string
 	HashKey             string
+	Version             string
 }
 
 // Scripts stores javascript scripts that are later injected into templateHTML
@@ -78,7 +81,9 @@ func GenerateHTML(templateHTML string, scripts Scripts, answers UserAnswers) (st
 	return outputHTML.String(), nil
 }
 
-// CreateHashFromUserAnswers creates a unique hash based on user settings
+// CreateHashFromUserAnswers creates a unique hash based on user settings.
+// This hash is used as a localStorage key to maintain playlist state.
+// Note: MD5 is used here only for creating a quick hash key, not for security purposes.
 func CreateHashFromUserAnswers(answers UserAnswers) string {
 	s := fmt.Sprintf(
 		"%v%v%v%s%s",

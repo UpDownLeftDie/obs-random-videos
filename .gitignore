@@ -23,6 +23,7 @@ desktop.ini
 # Build and distribution files
 dist/
 build/
+test/
 
 # Logs
 *.log

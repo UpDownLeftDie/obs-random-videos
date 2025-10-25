@@ -5,8 +5,25 @@ const transitionVideoPath = {{ JSEscape .TransitionVideo }};
 const playOnlyOne = {{ .PlayOnlyOne }};
 const loopFirstVideo = {{ .LoopFirstVideo }};
 const hashKey = {{ JSEscape .HashKey }};
-// @ts-ignore
-const isOBS = !!(window?.obsstudio?.pluginVersion);
+
+/**
+ * Detect if running in a browser vs streaming software
+ * Most streaming software uses embedded Chromium, so we need specific checks
+ * Err on the side of assuming streaming software unless we can definitively confirm browser
+ */
+const isBrowser = (
+  // Not in any known streaming software
+  !window.obsstudio &&
+  !window.obs &&
+  !window.streamlabsOBS &&
+  // Loaded via network protocol (streaming software typically uses file:// or custom protocols)
+  typeof window.location !== 'undefined' &&
+  window.location.protocol.startsWith('http') &&
+  // In top-level window (not embedded in streaming software frame)
+  typeof window.self !== 'undefined' &&
+  typeof window.top !== 'undefined' &&
+  window.self === window.top
+);
 
 /**
  * VideoPlayerManager handles the dual-player system for seamless video playback
@@ -62,7 +79,7 @@ class VideoPlayerManager {
       if (this.preloadTimer) clearTimeout(this.preloadTimer);
       this.preloadTimer = setTimeout(() => this.preloadNextVideo(), 1000);
     };
-    
+
     this.player1.addEventListener('ended', player1EndedHandler, { passive: true });
     this.eventListenerCleanup.push(() => {
       this.player1.removeEventListener('ended', player1EndedHandler);
@@ -78,7 +95,7 @@ class VideoPlayerManager {
       if (this.preloadTimer) clearTimeout(this.preloadTimer);
       this.preloadTimer = setTimeout(() => this.preloadNextVideo(), 1000);
     };
-    
+
     this.player2.addEventListener('ended', player2EndedHandler, { passive: true });
     this.eventListenerCleanup.push(() => {
       this.player2.removeEventListener('ended', player2EndedHandler);
@@ -88,8 +105,8 @@ class VideoPlayerManager {
     this.setupErrorHandling(this.player1);
     this.setupErrorHandling(this.player2);
 
-    // Add controls for non-OBS environments
-    if (!isOBS) {
+    // Add controls for browser environments (not streaming software)
+    if (isBrowser) {
       this.player1.setAttribute('controls', 'true');
       this.player2.setAttribute('controls', 'true');
     }
@@ -136,7 +153,7 @@ class VideoPlayerManager {
       case 'error':
         const errorStr = `Error loading: ${videoSrc}`;
         console.error(errorStr);
-        if (isOBS) break;
+        if (!isBrowser) break; // Don't show error UI in streaming software
 
         // Avoid DOM thrashing by only replacing if error element doesn't exist
         let errorElement = document.getElementById('error');
@@ -195,6 +212,12 @@ class VideoPlayerManager {
    */
   playNext(currentPlayer, nextPlayer) {
     try {
+      // Clear any pending preload timer first to prevent race conditions
+      if (this.preloadTimer) {
+        clearTimeout(this.preloadTimer);
+        this.preloadTimer = null;
+      }
+
       const currentMp4Source = /** @type {HTMLSourceElement} */(currentPlayer.querySelector('source'));
       const nextMp4Source = /** @type {HTMLSourceElement} */(nextPlayer.querySelector('source'));
       const currentVideo = currentMp4Source.getAttribute('src');
@@ -210,17 +233,11 @@ class VideoPlayerManager {
       currentPlayer.load();
 
       // Store the last played video if it's not the transition video
-      // currentVideo is encoded from getAttribute('src'), so decode it for storage
-      // Also decode transitionVideoPath for comparison since both should be compared unencoded
+      // Use the helper method to decode paths for comparison
       if (currentVideo) {
-        const parts = currentVideo.split('/');
-        const decodedParts = parts.map(part => decodeURIComponent(part));
-        const decodedVideo = decodedParts.join('/');
-        
-        const transitionParts = transitionVideoPath.split('/');
-        const decodedTransitionParts = transitionParts.map(part => decodeURIComponent(part));
-        const decodedTransitionPath = decodedTransitionParts.join('/');
-        
+        const decodedVideo = this.playlistManager.decodeVideoPath(currentVideo);
+        const decodedTransitionPath = this.playlistManager.decodeVideoPath(transitionVideoPath);
+
         if (decodedVideo !== decodedTransitionPath) {
           this.playlistManager.setLastPlayed(decodedVideo);
         }
@@ -326,18 +343,40 @@ class PlaylistManager {
     this.initialPlaylist = initialPlaylist;
     /** @type {string} */
     this.hashKey = hashKey;
+    /** @type {string[]|null} Cache for playlist to reduce localStorage access */
+    this._cachedPlaylist = null;
+    /** @type {string|null} Cache for last played item */
+    this._cachedLastPlayed = null;
   }
 
   /**
-   * Get the current playlist from localStorage or create a new one
+   * Get the current playlist from cache or localStorage
    * @returns {string[]} The current playlist
    */
   getPlaylist() {
+    // Return cached playlist if available
+    if (this._cachedPlaylist !== null && this._cachedPlaylist.length > 0) {
+      return this._cachedPlaylist;
+    }
+
+    // Load from localStorage
     let playlist = [];
-    playlist = JSON.parse(localStorage.getItem(`playlist-${this.hashKey}`) || '[]');
+    const stored = localStorage.getItem(`playlist-${this.hashKey}`);
+    if (stored) {
+      try {
+        playlist = JSON.parse(stored);
+      } catch (e) {
+        console.error('Error parsing playlist from localStorage:', e);
+        playlist = [];
+      }
+    }
+
     if (!playlist?.length || typeof playlist.pop === 'undefined') {
       playlist = this.createNewPlaylist();
     }
+
+    // Cache the playlist
+    this._cachedPlaylist = playlist;
     return playlist;
   }
 
@@ -352,11 +391,16 @@ class PlaylistManager {
   }
 
   /**
-   * Store the playlist in localStorage
+   * Store the playlist in cache and localStorage
    * @param {string[]} playlist - The playlist to store
    */
   storePlaylist(playlist) {
-    localStorage.setItem(`playlist-${this.hashKey}`, JSON.stringify(playlist));
+    this._cachedPlaylist = playlist;
+    try {
+      localStorage.setItem(`playlist-${this.hashKey}`, JSON.stringify(playlist));
+    } catch (e) {
+      console.error('Error storing playlist to localStorage:', e);
+    }
   }
 
   /**
@@ -376,11 +420,11 @@ class PlaylistManager {
   getNextItem(returnEncoded = true) {
     let attempts = 0;
     const maxAttempts = this.initialPlaylist.length + 1; // Prevent infinite loops
-    
+
     while (attempts < maxAttempts) {
       const playlist = this.getPlaylist();
       let mediaItem = playlist.pop() || '';
-      
+
       if (!mediaItem) {
         // Playlist is empty, create a new one
         this.createNewPlaylist();
@@ -389,9 +433,7 @@ class PlaylistManager {
       }
 
       // Decode mediaItem for comparison since lastPlayed is stored unencoded
-      const parts = mediaItem.split('/');
-      const decodedParts = parts.map(part => decodeURIComponent(part));
-      const decodedMediaItem = decodedParts.join('/');
+      const decodedMediaItem = this.decodeVideoPath(mediaItem);
 
       console.debug({
         lastPlayed: this.getLastPlayed(),
@@ -421,19 +463,58 @@ class PlaylistManager {
   }
 
   /**
-   * Set the last played item
+   * Set the last played item in cache and localStorage
    * @param {string} videoSrc - The video source URL
    */
   setLastPlayed(videoSrc) {
-    localStorage.setItem(`lastPlayed-${this.hashKey}`, videoSrc);
+    this._cachedLastPlayed = videoSrc;
+    try {
+      localStorage.setItem(`lastPlayed-${this.hashKey}`, videoSrc);
+    } catch (e) {
+      console.error('Error storing last played to localStorage:', e);
+    }
   }
 
   /**
-   * Get the last played item
+   * Get the last played item from cache or localStorage
    * @returns {string} The last played item
    */
   getLastPlayed() {
-    return localStorage.getItem(`lastPlayed-${this.hashKey}`) || '';
+    // Return cached value if available
+    if (this._cachedLastPlayed !== null) {
+      return this._cachedLastPlayed;
+    }
+
+    // Load from localStorage
+    const lastPlayed = localStorage.getItem(`lastPlayed-${this.hashKey}`) || '';
+    this._cachedLastPlayed = lastPlayed;
+    return lastPlayed;
+  }
+
+  /**
+   * Clear all caches (useful for testing or reset)
+   */
+  clearCache() {
+    this._cachedPlaylist = null;
+    this._cachedLastPlayed = null;
+  }
+
+  /**
+   * Encode a video path for use in URLs (encodes each path segment separately)
+   * @param {string} path - The file path to encode
+   * @returns {string} The encoded path
+   */
+  encodeVideoPath(path) {
+    return path.split('/').map(part => encodeURIComponent(part)).join('/');
+  }
+
+  /**
+   * Decode a video path from a URL (decodes each path segment separately)
+   * @param {string} path - The encoded path to decode
+   * @returns {string} The decoded path
+   */
+  decodeVideoPath(path) {
+    return path.split('/').map(part => decodeURIComponent(part)).join('/');
   }
 
   /**

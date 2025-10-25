@@ -1,3 +1,5 @@
+// Package ui provides user interface functions for the OBS Random Videos application.
+// This file implements interactive terminal UI using the Bubble Tea framework.
 package ui
 
 import (
