@@ -24,10 +24,11 @@ type UserAnswers struct {
 	Version             string
 }
 
-// Scripts stores javascript scripts that are later injected into templateHTML
+// Scripts stores javascript scripts and metadata that are later injected into templateHTML
 type Scripts struct {
 	MainScript string
 	BodyScript string
+	Version    string
 }
 
 // GenerateHTML generates the HTML file from the template and user answers

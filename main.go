@@ -117,6 +117,7 @@ func main() {
 	scripts := ui.Scripts{
 		MainScript: mainScript,
 		BodyScript: bodyScript,
+		Version:    cfg.Version,
 	}
 
 	// Generate HTML
